@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="glass">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masala Lab Atlas · Interactive Science of Indian Cooking</title>
+  <meta name="description" content="An unofficial, interactive visual study companion to the food science in Krish Ashok's Masala Lab: thermodynamics, spice molecules, Maillard chemistry, pH, umami synergy, microwaves and biryani project planning." />
+  <meta name="theme-color" content="#f4f6fb" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Masala Lab Atlas · Interactive Science of Indian Cooking" />
+  <meta property="og:description" content="Spice molecule networks, kinetic heat simulations, pH physics, umami synergy curves and more, all interactive." />
+  <meta property="og:image" content="assets/img/hero-spice-lab.webp" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M24 6h16v4h-3v14l15 26a6 6 0 0 1-5 9H17a6 6 0 0 1-5-9l15-26V10h-3z' fill='%23b91c1c'/%3E%3Ccircle cx='28' cy='46' r='4' fill='%23fbbf24'/%3E%3Ccircle cx='38' cy='40' r='3' fill='%23fbbf24'/%3E%3C/svg%3E" />
+  <script>
+    // Apply the saved (or OS-preferred) theme before first paint to avoid a flash.
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('masala_lab_theme'); } catch (e) {}
+      if (!t && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+      if (['glass', 'brutal', 'editorial', 'dark'].indexOf(t) === -1) t = 'glass';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/tailwind.css" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+  <script defer src="assets/vendor/chart.umd.min.js"></script>
+  <script defer src="assets/vendor/smiles-drawer.min.js"></script>
+  <script defer src="assets/js/data.js"></script>
+  <script defer src="assets/js/viz.js"></script>
+  <script defer src="assets/js/app.js"></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="ambient-layer" aria-hidden="true"></div>
+  <div class="molecule-pattern" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <!-- Top Sticky Command Bar -->
+    <header class="lab-nav sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <button id="brand-home-btn" class="flex items-center gap-2.5 text-left group" type="button" aria-label="Return to Masala Lab Atlas Overview">
+            <span class="brand-mark w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background:var(--accent);color:#fff;" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7.5 15h9"/></svg>
+            </span>
+            <div class="truncate">
+              <div class="font-display font-bold text-lg leading-tight truncate">Masala Lab Atlas</div>
+              <div class="text-xs text-muted truncate hidden sm:block">Unofficial visual companion to Krish Ashok’s <em>Masala Lab</em></div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Live UI/UX Paradigm Switcher -->
+        <div class="flex items-center gap-1.5 ml-auto">
+          <button type="button" data-open-palette class="lab-btn search-trigger px-3 py-1.5 text-xs font-medium flex items-center gap-2" aria-label="Search all tools (Ctrl+K)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <span class="hidden md:inline">Search tools</span>
+            <kbd class="hidden md:inline font-mono-lab text-[10px] px-1 rounded border" style="border-color:var(--border-subtle)">Ctrl K</kbd>
+          </button>
+          <label class="sr-only" for="theme-select">Theme</label>
+          <select id="theme-select" class="lab-input text-xs py-1.5 sm:hidden" aria-label="Theme">
+            <option value="glass">Glass</option><option value="brutal">Neobrutal</option><option value="editorial">Editorial</option><option value="dark">Dark Lab</option>
+          </select>
+        </div>
+        <div class="hidden sm:flex items-center gap-1.5" role="group" aria-label="Theme">
+          <span class="hidden xl:inline text-xs font-mono-lab text-muted mr-1">THEME:</span>
+          <button type="button" data-theme-btn="glass" class="lab-btn px-2.5 sm:px-3 py-1.5 text-xs font-medium">Glass</button>
+          <button type="button" data-theme-btn="brutal" class="lab-btn px-2.5 sm:px-3 py-1.5 text-xs font-medium">Neobrutal</button>
+          <button type="button" data-theme-btn="editorial" class="lab-btn px-2.5 sm:px-3 py-1.5 text-xs font-medium">Editorial</button>
+          <button type="button" data-theme-btn="dark" class="lab-btn px-2.5 sm:px-3 py-1.5 text-xs font-medium">Dark Lab</button>
+        </div>
+      </div>
+
+      <!-- Single-line Scrollable Chapter Dock -->
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 pb-3 flex items-center gap-2 overflow-x-auto no-scrollbar chapter-dock" role="tablist" aria-label="Chapters">
+        <button type="button" role="tab" data-tab="overview" class="lab-btn active px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">Atlas Home</button>
+        <button type="button" role="tab" data-tab="ch1" class="lab-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">1 · Heat &amp; Pressure</button>
+        <button type="button" role="tab" data-tab="ch2" class="lab-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">2 · Spices &amp; Flavour</button>
+        <button type="button" role="tab" data-tab="ch3" class="lab-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">3 · Maillard &amp; Frying</button>
+        <button type="button" role="tab" data-tab="ch4" class="lab-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">4 · Dropping Acid</button>
+        <button type="button" role="tab" data-tab="ch5" class="lab-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">5 · Umami, Soda, Rum</button>
+        <button type="button" role="tab" data-tab="ch6" class="lab-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">6 · Modernist Lab</button>
+        <button type="button" role="tab" data-tab="ch7" class="lab-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">7 · Dish Generators</button>
+        <button type="button" role="tab" data-tab="ch8" class="lab-btn px-3.5 py-1.5 text-xs sm:text-sm whitespace-nowrap">8 · Biryani &amp; A/B Log</button>
+      </nav>
+      <div class="scroll-progress-track" aria-hidden="true"><div id="scroll-progress"></div></div>
+    </header>
+
+    <!-- Main Viewport -->
+    <main id="main" tabindex="-1" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+      <!-- ===============================================================
+           VIEW 0: ATLAS HOME (BENTO OVERVIEW)
+      =============================================================== -->
+      <section role="tabpanel" id="panel-overview" class="tab-panel active space-y-6">
+        <!-- Hero Bento Split -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <div class="lab-card p-6 sm:p-8 lg:col-span-7 flex flex-col justify-between">
+            <div>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">217 PAGES SYNTHESIZED</span>
+                <span class="amber-pill px-3 py-1 text-xs font-mono-lab font-semibold">8 CHAPTERS + METHODOLOGY</span>
+                <span class="teal-pill px-3 py-1 text-xs font-mono-lab font-semibold">30+ INTERACTIVE SCIENCE TOOLS</span>
+              </div>
+              <h1 class="font-display text-3xl sm:text-5xl font-bold leading-tight tracking-tight mb-4">
+                Indian Cooking as Chemical Engineering, Not Mystique.
+              </h1>
+              <p class="text-sm sm:text-base text-muted leading-relaxed mb-6">
+                Play with the physics and chemistry behind Krish Ashok’s <em>Masala Lab</em>. Watch water molecules speed up as you heat them, draw real skeletal structures of spice aromas, drag a cursor along the pH scale, plot umami synergy curves, and freeze a microwave’s standing wave. Press <kbd class="font-mono-lab text-xs px-1 rounded border" style="border-color:var(--border-subtle)">/</kbd> to search any tool.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2.5">
+              <button type="button" data-jump="ch2" class="lab-btn active px-4 py-2 text-sm font-medium">Launch 23-Spice Molecule Graph</button>
+              <button type="button" data-jump="ch7" class="lab-btn px-4 py-2 text-sm font-medium">Open Dish Generators</button>
+              <button type="button" data-jump="ch8" class="lab-btn px-4 py-2 text-sm font-medium">6-Track Biryani Planner</button>
+            </div>
+          </div>
+
+          <div class="lab-card overflow-hidden lg:col-span-5 flex flex-col">
+            <div class="relative">
+              <img src="assets/img/hero-spice-lab.webp" alt="Whole Indian spices in glass test tubes beside a cast iron kadai" width="1100" height="614" fetchpriority="high" class="w-full h-56 sm:h-64 object-cover" />
+              <svg class="hero-molecule" viewBox="0 0 120 120" aria-hidden="true">
+                <g fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round">
+                  <path d="M60 22 L88 38 L88 70 L60 86 L32 70 L32 38 Z"/>
+                  <path d="M60 30 L81 42 M81 66 L60 78 M39 66 L39 42"/>
+                  <path d="M88 38 L108 26 M60 86 L60 108 M32 38 L14 28"/>
+                </g>
+                <circle cx="108" cy="26" r="6" fill="#f87171"/><text x="108" y="29.5" font-size="8" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="700">O</text>
+                <circle cx="14" cy="28" r="6" fill="#f87171"/><text x="14" y="31.5" font-size="8" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="700">O</text>
+              </svg>
+            </div>
+            <div class="p-5 flex-1 flex flex-col justify-between">
+              <p class="text-sm italic font-display text-muted">“We aren’t looking for authentic. We are looking for delicious and adventurous.”</p>
+              <div class="grid grid-cols-3 gap-2 pt-4 mt-3 border-t" style="border-color:var(--border-subtle);">
+                <div>
+                  <div class="font-mono-lab text-xl font-bold" style="color:var(--accent);">23</div>
+                  <div class="text-xs text-muted">Spices Mapped</div>
+                </div>
+                <div>
+                  <div class="font-mono-lab text-xl font-bold" style="color:var(--accent-2);">15</div>
+                  <div class="text-xs text-muted">Fat Smoke Points</div>
+                </div>
+                <div>
+                  <div class="font-mono-lab text-xl font-bold" style="color:var(--accent-3);">45</div>
+                  <div class="text-xs text-muted">Molecules Drawn</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4-Stage Modular Workflow Banner -->
+        <div class="lab-card p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div>
+              <h2 class="font-display text-xl sm:text-2xl font-bold">The Book’s Core Metamodel: 4 Modular Stages</h2>
+              <p class="text-xs sm:text-sm text-muted">How Masala Lab replaces linear recipes with repeatable chemical workflows.</p>
+            </div>
+            <input id="atlas-search" type="search" aria-label="Filter chapters and tools" placeholder="Filter chapters or tools (e.g. biryani, pH, brine, garlic)..." class="lab-input text-sm w-full sm:w-80" />
+          </div>
+          <div class="rounded-xl overflow-hidden border mb-5" style="border-color:var(--border-subtle);background:#fff;">
+            <img src="assets/img/modular-workflow.webp" loading="lazy" width="1376" height="768" alt="Four stages of Indian culinary engineering from prep to pressure cooking, spice grinding, and layered biryani" class="w-full max-h-56 object-contain mx-auto" />
+          </div>
+          <div id="atlas-search-hits" class="flex flex-wrap items-center gap-1.5 mb-4 empty:hidden" aria-live="polite"></div>
+          <div id="bento-chapter-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           CHAPTER 1: ZERO-PRESSURE COOKING
+      =============================================================== -->
+      <section role="tabpanel" id="panel-ch1" class="tab-panel space-y-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-3">
+          <div>
+            <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 1 · PP. 22–66</span>
+            <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">Zero-Pressure Cooking</h2>
+            <p class="text-sm text-muted mt-1">Thermodynamics of heat, water bonds, pressure-cooking physics, cookware materials, rice amylose, and fat smoke points.</p>
+          </div>
+        </div>
+
+        <!-- 1A. Thermal Threshold Slider (0–480°C) -->
+        <div id="sec-thermal" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">Interactive Cooking Thermal Spectrum (0°C – 480°C)</h3>
+              <p class="text-xs text-muted">Drag the temperature slider or tap a milestone to inspect physical &amp; chemical reactions (pp. 25, 29, 45, 59, 65, 152).</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono-lab text-3xl font-bold" id="temp-readout" style="color:var(--accent);">121°C</span>
+              <span id="temp-zone-badge" class="amber-pill px-3 py-1 text-xs font-mono-lab font-semibold">PRESSURE PEAK</span>
+            </div>
+          </div>
+
+          <svg id="thermo-band" viewBox="0 0 1000 96" class="w-full h-auto mb-1 touch-none cursor-ew-resize select-none" role="img" aria-label="Temperature band from 0 to 480 degrees Celsius with coloured cooking zones. Drag to change temperature."></svg>
+          <div class="flex items-center justify-between text-xs mb-3">
+            <span id="thermo-zone-label" class="font-semibold"></span>
+            <span id="temp-next" class="text-muted font-mono-lab text-[11px] text-right"></span>
+          </div>
+          <input id="thermal-slider" type="range" min="0" max="480" value="121" class="lab-slider mb-4" aria-label="Temperature in degrees Celsius" />
+
+          <div class="flex flex-wrap gap-1.5 mb-5" id="thermal-milestones"></div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="lab-subpanel p-4 md:col-span-2">
+              <div class="text-xs font-mono-lab text-muted mb-1">WHAT HAPPENS AT THIS TEMPERATURE</div>
+              <div id="temp-title" class="font-display text-xl font-bold mb-1"></div>
+              <p id="temp-desc" class="text-sm text-muted leading-relaxed"></p>
+              <div class="mt-4 rounded-xl overflow-hidden border kinetics-box" style="border-color:var(--border-subtle)">
+                <div class="flex items-center justify-between px-3 py-1.5 text-[11px] font-mono-lab text-muted border-b" style="border-color:var(--border-subtle)">
+                  <span>MOLECULAR VIEW · H₂O KINETICS</span><span>v<sub>rms</sub> = √(3RT/M)</span>
+                </div>
+                <canvas id="kinetics-canvas" class="w-full h-40 block" role="img" aria-label="Animated water molecules whose speed and phase change with temperature"></canvas>
+                <div id="kinetics-readout" class="px-3 py-2 text-xs flex flex-wrap gap-x-2 border-t" style="border-color:var(--border-subtle)"></div>
+              </div>
+            </div>
+            <div class="lab-subpanel p-4 flex flex-col justify-between">
+              <div>
+                <div class="text-xs font-mono-lab text-muted mb-1">COOKING MEDIUM &amp; REGIME</div>
+                <div id="temp-regime" class="font-semibold text-sm mb-2"></div>
+              </div>
+              <div class="text-xs text-muted" id="temp-tip"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1A+. Boiling point vs pressure (Antoine) -->
+        <div id="sec-boiling" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-4">
+            <div>
+              <span class="teal-pill px-2.5 py-0.5 text-[11px] font-mono-lab font-semibold">PHYSICS LAB · ANTOINE EQUATION</span>
+              <h3 class="font-display text-xl font-bold mt-2">Why Dal Takes Forever in Shimla: Boiling Point vs Pressure</h3>
+              <p class="text-xs text-muted">Water boils when its vapour pressure equals the pressure above it. Climb a mountain and that pressure drops. Seal a cooker and it rises (pp. 44–45).</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div class="lg:col-span-5 space-y-4">
+              <div class="lab-subpanel p-4 space-y-3">
+                <div class="flex items-center justify-between text-xs font-mono-lab text-muted"><label for="alt-slider">ALTITUDE</label><span id="alt-readout" class="font-bold" style="color:var(--text-main)"></span></div>
+                <input id="alt-slider" type="range" min="0" max="5500" step="10" value="2276" class="lab-slider" />
+                <div id="alt-presets" class="flex flex-wrap gap-1.5"></div>
+              </div>
+              <div class="lab-subpanel p-4 space-y-3">
+                <label class="flex items-center gap-2 text-sm font-semibold cursor-pointer"><input id="cooker-toggle" type="checkbox" checked class="w-4 h-4 accent-red-700" /> Seal the pressure cooker</label>
+                <div class="flex items-center justify-between text-xs font-mono-lab text-muted"><label for="gauge-slider">VALVE GAUGE PRESSURE</label><span id="gauge-readout" class="font-bold" style="color:var(--text-main)"></span></div>
+                <input id="gauge-slider" type="range" min="0" max="110" step="5" value="100" class="lab-slider" />
+              </div>
+              <div id="boil-result" class="lab-subpanel p-4"></div>
+            </div>
+            <div class="lg:col-span-7 lab-subpanel p-3">
+              <div class="relative h-72 sm:h-80"><canvas id="boil-chart" role="img" aria-label="Line chart of water boiling point against absolute pressure, with Indian cities and your setting marked"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1B. 2x2 Cooking Quadrant & Pressure Cooker Time Calculator -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- 2x2 Quadrant -->
+          <div id="sec-quadrant" class="lab-card p-5 sm:p-6 lg:col-span-5 scroll-mt-32">
+            <h3 class="font-display text-xl font-bold mb-1">2×2 Cooking Method Matrix</h3>
+            <p class="text-xs text-muted mb-4">Moist (&lt;100°C, no browning) vs. Dry (&gt;100°C, Maillard browning) across Slow &amp; Fast heat (p. 34).</p>
+            <div class="grid grid-cols-2 gap-3 mb-4" id="quadrant-grid">
+              <button type="button" data-quad="moist-slow" class="lab-subpanel p-4 text-left hover:opacity-90 transition cursor-pointer">
+                <div class="text-xs font-mono-lab text-muted">MOIST · SLOW</div>
+                <div class="font-bold text-base mt-1">Stew &amp; Braise</div>
+                <div class="text-xs text-muted mt-1">&lt;100°C · Tough meats</div>
+              </button>
+              <button type="button" data-quad="dry-slow" class="lab-subpanel p-4 text-left hover:opacity-90 transition cursor-pointer">
+                <div class="text-xs font-mono-lab text-muted">DRY · SLOW</div>
+                <div class="font-bold text-base mt-1">Smoke, Roast, BBQ</div>
+                <div class="text-xs text-muted mt-1">&gt;100°C · Deep aroma</div>
+              </button>
+              <button type="button" data-quad="moist-fast" class="lab-subpanel p-4 text-left hover:opacity-90 transition cursor-pointer">
+                <div class="text-xs font-mono-lab text-muted">MOIST · FAST</div>
+                <div class="font-bold text-base mt-1">Steam, Boil, Pressure</div>
+                <div class="text-xs text-muted mt-1">Blanch, Poach, Simmer</div>
+              </button>
+              <button type="button" data-quad="dry-fast" class="lab-subpanel p-4 text-left hover:opacity-90 transition cursor-pointer">
+                <div class="text-xs font-mono-lab text-muted">DRY · FAST</div>
+                <div class="font-bold text-base mt-1">Sauté, Bake, Broil, Fry</div>
+                <div class="text-xs text-muted mt-1">110–190°C · Crisp crust</div>
+              </button>
+            </div>
+            <div id="quad-detail" class="lab-subpanel p-4 text-sm text-muted"></div>
+          </div>
+
+          <!-- Pressure Cooking Time Calculator (Replaces Whistles) -->
+          <div id="sec-pressure" class="lab-card p-5 sm:p-6 lg:col-span-7 scroll-mt-32">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="font-display text-xl font-bold">Stop Counting Whistles: Peak-Pressure Timer</h3>
+                <p class="text-xs text-muted">Start the clock <em>after</em> full pressure (121°C / +1 bar) is reached. Cuts cook time 30–40% (pp. 45–47).</p>
+              </div>
+              <div class="flex gap-1.5">
+                <button type="button" data-pc-cat="all" class="lab-btn active px-3 py-1 text-xs">All</button>
+                <button type="button" data-pc-cat="veg" class="lab-btn px-3 py-1 text-xs">Vegetables (9)</button>
+                <button type="button" data-pc-cat="legume" class="lab-btn px-3 py-1 text-xs">Legumes (6)</button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4 mb-4 p-3 lab-subpanel text-xs">
+              <label class="flex items-center gap-2 cursor-pointer font-medium">
+                <input id="pc-soda-toggle" type="checkbox" class="w-4 h-4 accent-red-700" />
+                Add pinch of Baking Soda to hard legumes (−40% time + add teabag to neutralize!)
+              </label>
+              <span class="font-mono-lab text-muted">Induction heuristic: 300W med-low · 500–600W med-high · 2000W boil only</span>
+            </div>
+
+            <div id="pc-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5"></div>
+          </div>
+        </div>
+
+        <!-- 1C. Fat Smoke Points Chart & Cookware Matrix -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div id="sec-fats" class="lab-card p-5 sm:p-6 lg:col-span-7 scroll-mt-32">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 class="font-display text-xl font-bold">15 Fats &amp; Oils: Smoke Point Chart</h3>
+                <p class="text-xs text-muted">Never deep-fry in unrefined/virgin oils; save expensive oils for finishing (p. 65).</p>
+              </div>
+              <div class="flex gap-1.5">
+                <button type="button" data-fat-filter="all" class="lab-btn active px-3 py-1 text-xs">All (15)</button>
+                <button type="button" data-fat-filter="yes" class="lab-btn px-3 py-1 text-xs">Fry-Safe (10)</button>
+                <button type="button" data-fat-filter="no" class="lab-btn px-3 py-1 text-xs">No Frying (5)</button>
+              </div>
+            </div>
+            <div class="relative h-80">
+              <canvas id="fat-smoke-chart" role="img" aria-label="Horizontal bar chart of smoke points for 15 fats and oils"></canvas>
+            </div>
+          </div>
+
+          <div id="sec-cookware" class="lab-card p-5 sm:p-6 lg:col-span-5 flex flex-col justify-between scroll-mt-32">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <h3 class="font-display text-xl font-bold">Cookware Material Matrix</h3>
+                <label class="text-xs flex items-center gap-1.5 cursor-pointer font-medium">
+                  <input id="acid-safe-filter" type="checkbox" class="w-4 h-4 accent-red-700" />
+                  Acid-safe only
+                </label>
+              </div>
+              <p class="text-xs text-muted mb-3">Conductivity, heat retention, and acid reactivity for 8 vessels (p. 36).</p>
+              <div id="cookware-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+            </div>
+            <div class="lab-subpanel p-3 mt-4 text-xs text-muted">
+              <strong style="color:var(--text-main);">Rice Amylose Rule (p. 49):</strong> &lt;20% amylose = sticky (Ponni 16%, Gobhindobhog 18%). &gt;20% = separate grains (Basmati 20–25%, Sona Masoori 23%). Use the <strong>first-knuckle water rule</strong> above rice level to account for evaporation regardless of pot scale!
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           CHAPTER 2: SCIENCE OF SPICE & FLAVOUR
+      =============================================================== -->
+      <section role="tabpanel" id="panel-ch2" class="tab-panel space-y-6">
+        <div>
+          <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 2 · PP. 67–97</span>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">Science of Spice &amp; Flavour</h2>
+          <p class="text-sm text-muted mt-1">80% of flavour happens in the nose (retronasal olfaction). Spices pair harmoniously when they share volatile flavour molecules.</p>
+        </div>
+
+        <!-- 2A. Interactive 23-Spice Molecular Pairing Network -->
+        <div id="sec-spice-network" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-display text-2xl font-bold">23-Spice Molecular Pairing Network</h3>
+              <p class="text-xs sm:text-sm text-muted">Click any spice node or filter by a shared chemical molecule (pp. 86–89) to highlight molecular pairings and craft a fresh masala.</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5" id="molecule-filters"></div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <div class="lg:col-span-7 lab-subpanel p-3 flex items-center justify-center">
+              <div class="w-full">
+                <svg id="spice-network-svg" viewBox="0 0 600 600" class="w-full max-w-[540px] h-auto mx-auto block" role="group" aria-label="Interactive circular network graph of 23 Indian spices and their shared flavour molecules. Use Tab and Enter to select a spice."></svg>
+                <div id="spice-legend" class="flex flex-wrap justify-center gap-x-3 gap-y-1 px-2 pb-1"></div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5 space-y-4">
+              <div class="lab-subpanel p-4" id="spice-inspector"></div>
+
+              <!-- Custom Masala Builder (p. 96 Algorithm) -->
+              <div class="lab-subpanel p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="font-bold text-sm">Custom Fresh Masala Builder (p. 96)</div>
+                  <button type="button" id="clear-masala-btn" class="text-xs underline text-muted cursor-pointer">Clear</button>
+                </div>
+                <p class="text-xs text-muted mb-3">Rule: Pick 1–2 dominant spices, then add partners sharing at least one volatile molecule. Don’t add too many or it turns into generic instant-noodle masala!</p>
+                <div id="custom-masala-chips" class="flex flex-wrap gap-1.5 mb-3"></div>
+                <div id="custom-masala-analysis" class="text-xs text-muted"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2B. Taste Modulation Map + Scoville Chart -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Taste Interaction Map (p. 70) -->
+          <div id="sec-taste" class="lab-card p-5 sm:p-6 lg:col-span-5 scroll-mt-32">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="font-display text-xl font-bold">Taste Modulation Map</h3>
+                <p class="text-xs text-muted">Sub-threshold pinch vs. medium concentration (p. 70).</p>
+              </div>
+              <div class="flex gap-1">
+                <button type="button" data-taste-conc="low" class="lab-btn active px-2.5 py-1 text-xs">Low</button>
+                <button type="button" data-taste-conc="medium" class="lab-btn px-2.5 py-1 text-xs">Medium</button>
+              </div>
+            </div>
+            <svg id="taste-map-svg" viewBox="0 0 380 300" class="w-full h-auto" role="img" aria-label="Interactive taste modulation diagram showing enhance and suppress arrows"></svg>
+            <div id="taste-map-caption" class="lab-subpanel p-3 mt-3 text-xs text-muted"></div>
+          </div>
+
+          <!-- Scoville Heat Chart (p. 81) -->
+          <div id="sec-scoville" class="lab-card p-5 sm:p-6 lg:col-span-7 scroll-mt-32">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="font-display text-xl font-bold">Chilli Heat: Scoville Units &amp; 20L Buckets</h3>
+                <p class="text-xs text-muted">Capsaicin triggers TRPV1 heat receptors → brain releases endorphins. Fat &amp; alcohol dissolve capsaicin; water &amp; Coca-Cola fail (pp. 79–83).</p>
+              </div>
+              <div class="flex gap-1">
+                <button type="button" data-scoville-scale="logarithmic" class="lab-btn active px-2.5 py-1 text-xs">Log Scale</button>
+                <button type="button" data-scoville-scale="linear" class="lab-btn px-2.5 py-1 text-xs">Linear</button>
+              </div>
+            </div>
+            <div class="relative h-72">
+              <canvas id="scoville-chart" role="img" aria-label="Bar chart of Scoville heat units for 8 chillies"></canvas>
+            </div>
+            <div class="lab-subpanel mt-3 p-3 flex flex-col sm:flex-row items-center gap-3">
+              <canvas id="capsaicin-canvas" width="240" height="120" class="w-[240px] h-[120px] shrink-0" role="img" aria-label="Skeletal structure of capsaicin"></canvas>
+              <p class="text-xs text-muted leading-relaxed"><strong style="color:var(--text-main)">Capsaicin (C<sub>18</sub>H<sub>27</sub>NO<sub>3</sub>)</strong>: a polar vanillyl “head” (left ring) on a long greasy hydrocarbon “tail”. That tail makes it far more soluble in fat and alcohol than in water. Milk, ghee and coconut pull it off your TRPV1 receptors. Water just spreads it around.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2C. 12 Regional & Global Spice Blends Proportional Cloud -->
+        <div id="sec-blends" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">12 Regional &amp; Global Spice Blend Proportions</h3>
+              <p class="text-xs text-muted">Visual size mirrors the book’s proportional typography diagrams (pp. 94–95). Always buy whole spices and grind fresh!</p>
+            </div>
+            <img src="assets/img/mortar-spices-illustration.webp" loading="lazy" width="480" height="268" alt="Granite mortar and pestle with spices" class="w-28 h-16 object-cover rounded-lg border hidden sm:block" style="border-color:var(--border-subtle);" />
+          </div>
+          <div class="flex flex-wrap gap-1.5 mb-5" id="blend-tabs"></div>
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+            <div id="blend-cloud" class="md:col-span-7 lab-subpanel p-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 min-h-[170px]"></div>
+            <div id="blend-notes" class="md:col-span-5 lab-subpanel p-5 space-y-2 text-sm"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           CHAPTER 3: BROWN, BABY, BROWN
+      =============================================================== -->
+      <section role="tabpanel" id="panel-ch3" class="tab-panel space-y-6">
+        <div>
+          <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 3 · PP. 98–117</span>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">Brown, Baby, Brown</h2>
+          <p class="text-sm text-muted mt-1">Allium chemistry, the 5 stages of onion browning, garlic burning physics, the 6 Maillard flavour families, and deep-frying.</p>
+        </div>
+
+        <!-- 3A. 5-Stage Onion Browning Simulator -->
+        <div id="sec-onion" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-display text-2xl font-bold">5-Stage Onion Browning Simulator</h3>
+              <p class="text-xs text-muted">Slide from raw onion to jammy Stage 5 caramelization (pp. 104–108). Outer layers pack more flavour &amp; tears than inner layers!</p>
+            </div>
+            <label class="flex items-center gap-2 text-xs font-medium cursor-pointer lab-subpanel px-3 py-1.5">
+              <input id="onion-soda-toggle" type="checkbox" class="w-4 h-4 accent-red-700" />
+              Baking Soda Shortcut (alkaline pH accelerates Maillard!)
+            </label>
+          </div>
+
+          <input id="onion-stage-slider" type="range" min="0" max="5" step="1" value="3" class="lab-slider mb-4" aria-label="Onion browning stage from 0 to 5" />
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+            <div class="md:col-span-4 flex flex-col items-center justify-center p-6 rounded-2xl border transition-colors duration-300" id="onion-swatch" style="border-color:var(--border-subtle);">
+              <div id="onion-circle" class="hidden"></div>
+              <svg id="onion-section" viewBox="0 0 140 132" class="w-36 h-auto mb-2 drop-shadow-lg" role="img" aria-label="Cross-section of an onion whose layers brown from the outside in"></svg>
+              <div class="font-mono-lab text-xs font-bold uppercase tracking-wider" id="onion-stage-code"></div>
+              <div class="font-display text-2xl font-bold text-center" id="onion-stage-name"></div>
+            </div>
+            <div class="md:col-span-8 space-y-3">
+              <p id="onion-stage-chem" class="text-sm leading-relaxed"></p>
+              <div id="onion-meters" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2"></div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="lab-subpanel p-3.5">
+                  <div class="text-xs font-mono-lab text-muted">BEST DISH APPLICATIONS</div>
+                  <div id="onion-stage-dishes" class="text-sm font-semibold mt-1"></div>
+                </div>
+                <div class="lab-subpanel p-3.5">
+                  <div class="text-xs font-mono-lab text-muted">TIME &amp; ENGINEERING NOTE</div>
+                  <div id="onion-stage-time" class="text-sm font-semibold mt-1"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3B. Onion vs Garlic Cut Damage + Frying Temp Simulator -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div id="sec-allium" class="lab-card p-5 sm:p-6 lg:col-span-6 scroll-mt-32">
+            <h3 class="font-display text-xl font-bold mb-1">Mechanical Damage &amp; Pungency Dial</h3>
+            <p class="text-xs text-muted mb-4">Onion (89% water, 9% carbs, 2% protein) vs. Garlic (59% water, 30% sugar, 6% protein — burns fast, always add after onion! pp. 103, 109).</p>
+            <div class="flex flex-wrap gap-2 mb-4">
+              <button type="button" data-allium-cut="whole" class="lab-btn px-3 py-1.5 text-xs">Whole / Pole-to-Pole</button>
+              <button type="button" data-allium-cut="chopped" class="lab-btn active px-3 py-1.5 text-xs">Across Bulb / Chopped</button>
+              <button type="button" data-allium-cut="minced" class="lab-btn px-3 py-1.5 text-xs">Minced</button>
+              <button type="button" data-allium-cut="paste" class="lab-btn px-3 py-1.5 text-xs">Paste (Mixie)</button>
+            </div>
+            <div id="allium-cut-result" class="lab-subpanel p-4 space-y-2 text-sm"></div>
+          </div>
+
+          <div id="sec-fry" class="lab-card p-5 sm:p-6 lg:col-span-6 scroll-mt-32">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-display text-xl font-bold">Deep-Frying Oil Diagnostics</h3>
+              <span id="fry-temp-val" class="font-mono-lab text-xl font-bold" style="color:var(--accent);">177°C</span>
+            </div>
+            <p class="text-xs text-muted mb-3">Slide oil temperature to inspect puri / vada / birista outcomes (pp. 116–117).</p>
+            <input id="fry-temp-slider" type="range" min="130" max="225" value="177" class="lab-slider mb-4" aria-label="Deep frying oil temperature in Celsius" />
+            <div id="fry-diagnostic" class="lab-subpanel p-4 text-sm space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- 3C. 6 Maillard Molecule Families -->
+        <div id="sec-maillard" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <h3 class="font-display text-xl font-bold mb-1">The 6 Maillard Reaction Flavour Families (110–170°C)</h3>
+          <p class="text-xs text-muted mb-4">When surface water boils away, sugars + amino acids form N-Glycosylamine and rearrange into six aromatic classes (pp. 113–115).</p>
+          <div class="lab-subpanel p-3 mb-4 overflow-x-auto">
+            <svg id="maillard-pathway" viewBox="0 0 840 176" class="w-full min-w-[640px] h-auto" role="img" aria-label="Reaction pathway: reducing sugar and amino acid condense to N-glycosylamine, rearrange to a ketosamine, fragment into flavour families, then polymerise into melanoidins"></svg>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="maillard-cards"></div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           CHAPTER 4: DROPPING ACID
+      =============================================================== -->
+      <section role="tabpanel" id="panel-ch4" class="tab-panel space-y-6">
+        <div>
+          <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 4 · PP. 118–132</span>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">Dropping Acid</h2>
+          <p class="text-sm text-muted mt-1">Salt is the volume knob; sourness is the bass guitarist and mixing engineer combined. Most balanced dishes sit at pH 4.3–4.9.</p>
+        </div>
+
+        <!-- 4A. Interactive pH Scale -->
+        <div id="sec-ph" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">Interactive Culinary pH Scale (0 – 14)</h3>
+              <p class="text-xs text-muted">Click any benchmark on the scale to explore proton chemistry, evolutionary bitterness bias, and the Coca-Cola sugar shock (pp. 121–131).</p>
+            </div>
+            <span class="teal-pill px-3 py-1 text-xs font-mono-lab font-semibold">OPTIMAL DISH RANGE: pH 4.3 – 4.9</span>
+          </div>
+
+          <div class="overflow-x-auto -mx-1 px-1">
+            <svg id="ph-svg" viewBox="0 0 1000 170" class="w-full min-w-[620px] h-auto touch-none select-none cursor-crosshair" role="group" aria-label="pH scale 0 to 14 with kitchen benchmarks. Drag to measure any pH."></svg>
+          </div>
+          <div id="ph-readout" class="grid grid-cols-2 sm:grid-cols-3 gap-3 lab-subpanel p-3 my-4" aria-live="polite"></div>
+
+          <div class="flex flex-wrap gap-2 mb-4" id="ph-buttons"></div>
+          <div id="ph-detail" class="lab-subpanel p-4 text-sm"></div>
+        </div>
+
+        <!-- 4B. Culinary Acid Profiler & Chaat Layering Stack -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div id="sec-acids" class="lab-card p-5 sm:p-6 lg:col-span-8 scroll-mt-32">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 class="font-display text-xl font-bold">Indian Culinary Acid Profiler</h3>
+                <p class="text-xs text-muted">Compare anchor acids (cooked long) vs. accent acids (added at end) across 9 ingredients (pp. 123–132).</p>
+              </div>
+              <div class="flex gap-1.5">
+                <button type="button" data-acid-role="all" class="lab-btn active px-2.5 py-1 text-xs">All (9)</button>
+                <button type="button" data-acid-role="anchor" class="lab-btn px-2.5 py-1 text-xs">Anchors</button>
+                <button type="button" data-acid-role="accent" class="lab-btn px-2.5 py-1 text-xs">Accents</button>
+              </div>
+            </div>
+            <div id="acid-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+          </div>
+
+          <div id="sec-chaat" class="lab-card p-5 sm:p-6 lg:col-span-4 flex flex-col justify-between scroll-mt-32">
+            <div>
+              <h3 class="font-display text-xl font-bold mb-1">Acid Layering: The Chaat Architecture</h3>
+              <p class="text-xs text-muted mb-4">Why street chaat creates a "disco-party-in-the-mouth" (pp. 126, 132).</p>
+              <div class="space-y-2.5">
+                <div class="lab-subpanel p-3 border-l-4" style="border-left-color:#16a34a;">
+                  <div class="font-mono-lab text-xs font-bold">LAYER 4 · TOP ACCENT</div>
+                  <div class="font-semibold text-sm">Lime Juice in Green Chutney</div>
+                  <div class="text-xs text-muted">Lead vocalist — bright citric zing added raw at the end.</div>
+                </div>
+                <div class="lab-subpanel p-3 border-l-4" style="border-left-color:#eab308;">
+                  <div class="font-mono-lab text-xs font-bold">LAYER 3 · THE BRIDGE</div>
+                  <div class="font-semibold text-sm">Amchoor Sprinkle</div>
+                  <div class="text-xs text-muted">Lead guitarist — dry fruity sourness bridging lime and tamarind.</div>
+                </div>
+                <div class="lab-subpanel p-3 border-l-4" style="border-left-color:#9a3412;">
+                  <div class="font-mono-lab text-xs font-bold">LAYER 2 · BASE ANCHOR</div>
+                  <div class="font-semibold text-sm">Tamarind Chutney</div>
+                  <div class="text-xs text-muted">Drummer + bassist — meaty, cooked tartaric depth.</div>
+                </div>
+                <div class="lab-subpanel p-3 border-l-4" style="border-left-color:#dc2626;">
+                  <div class="font-mono-lab text-xs font-bold">LAYER 1 · UMAMI FOUNDATION</div>
+                  <div class="font-semibold text-sm">Chopped Tomatoes</div>
+                  <div class="text-xs text-muted">Mild acidity + glutamate savouriness in the pulp &amp; seeds.</div>
+                </div>
+              </div>
+            </div>
+            <div class="lab-subpanel p-3 mt-4 text-xs text-muted">
+              <strong>Pro Tip (p. 128):</strong> "When recipes call for tomato puree, noobs add puree, experts add tomato paste, and legends add tomato ketchup."
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           CHAPTER 5: UMAMI, SODA, RUM
+      =============================================================== -->
+      <section role="tabpanel" id="panel-ch5" class="tab-panel space-y-6">
+        <div>
+          <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 5 · PP. 133–141</span>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">Umami, Soda, Rum</h2>
+          <p class="text-sm text-muted mt-1">Rehabilitating three kitchen magic wands smeared by pseudoscience: MSG, sodium bicarbonate, and cooking alcohol.</p>
+        </div>
+
+        <!-- 5A. Umami T1R1/T1R3 Synergy Mixer -->
+        <div id="sec-umami" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <h3 class="font-display text-2xl font-bold mb-1">Interactive Umami Synergy Calculator (T1R1/T1R3 Receptors)</h3>
+          <p class="text-xs sm:text-sm text-muted mb-4">Combining Glutamates with Nucleotides (IMP or GMP) produces a super-linear, lingering savoury amplification (pp. 134–136).</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+            <div class="lab-subpanel p-4">
+              <label for="umami-glutamate" class="block text-xs font-mono-lab text-muted mb-2">1 · GLUTAMATE SOURCE</label>
+              <select id="umami-glutamate" class="lab-input w-full text-sm mb-2">
+                <option value="tomato">Tomatoes (pulp &amp; seeds)</option>
+                <option value="onion">Caramelized Onions</option>
+                <option value="cabbage">Browned Cabbage</option>
+                <option value="kombu">Kombu Seaweed</option>
+                <option value="msg">Pure MSG (1/3 sodium of salt)</option>
+              </select>
+              <p class="text-xs text-muted">Activates the T1R1/T1R3 umami receptor and keeps salt/sweet receptors fired longer.</p>
+            </div>
+            <div class="lab-subpanel p-4">
+              <label for="umami-nucleotide" class="block text-xs font-mono-lab text-muted mb-2">2 · IMP / GMP BOOSTER</label>
+              <select id="umami-nucleotide" class="lab-input w-full text-sm mb-2">
+                <option value="mutton">Mutton / Red Meat (IMP)</option>
+                <option value="anchovy">Tiny Fish / Anchovies (IMP)</option>
+                <option value="mushroom">Dried Mushrooms (GMP)</option>
+                <option value="bonito">Bonito / Tuna Flakes (IMP)</option>
+                <option value="none">None (Glutamate only)</option>
+              </select>
+              <p class="text-xs text-muted">Nucleotides lock glutamates snugly inside the receptor pocket.</p>
+            </div>
+            <div class="lab-subpanel p-4 flex flex-col justify-between" id="umami-output"></div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+            <div class="lg:col-span-5 lab-subpanel p-4 space-y-3">
+              <div class="teal-pill inline-block px-2.5 py-0.5 text-[11px] font-mono-lab font-semibold">YAMAGUCHI SYNERGY MODEL</div>
+              <p class="text-xs text-muted">Sensory panels found that umami from glutamate (u) plus a 5′-nucleotide (v) follows <span class="font-mono-lab" style="color:var(--text-main)">y = u + γ·u·v</span>, with γ ≈ 1218 for IMP and ≈ 2800 for GMP (concentrations in g/100 mL).</p>
+              <div>
+                <div class="flex justify-between text-xs font-mono-lab text-muted"><label for="umami-u">GLUTAMATE (u)</label><span id="umami-u-readout" style="color:var(--text-main)"></span></div>
+                <input id="umami-u" type="range" min="0.005" max="0.2" step="0.005" value="0.05" class="lab-slider mt-1" />
+              </div>
+              <div>
+                <div class="flex justify-between text-xs font-mono-lab text-muted"><label for="umami-v">NUCLEOTIDE (v)</label><span id="umami-v-readout" style="color:var(--text-main)"></span></div>
+                <input id="umami-v" type="range" min="0" max="0.05" step="0.001" value="0.01" class="lab-slider mt-1" />
+              </div>
+              <div id="umami-equation" class="pt-2 border-t" style="border-color:var(--border-subtle)"></div>
+            </div>
+            <div class="lg:col-span-7 lab-subpanel p-3">
+              <div class="relative h-64"><canvas id="umami-chart" role="img" aria-label="Line chart: umami intensity against nucleotide share of the mix, peaking near a 50:50 blend"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5B. Myth vs. Science Interactive Cards -->
+        <div id="sec-myths" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <h3 class="font-display text-xl font-bold mb-1">WhatsApp Forward vs. Food Science (Click Cards to Reveal Truth)</h3>
+          <p class="text-xs text-muted mb-4">Every common Indian kitchen myth tested against chemistry from Chapters 1–5.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="myth-grid"></div>
+        </div>
+
+        <!-- 5C. 5 Alcohol Cooking Techniques -->
+        <div id="sec-alcohol" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <h3 class="font-display text-xl font-bold mb-1">The Silver Medalist of Flavour Extraction: Alcohol</h3>
+          <p class="text-xs text-muted mb-4">After fats, ethanol is the best solvent for spice aroma molecules—and fermented naan (~2%) or ripe bananas (0.5%) already contain alcohol (pp. 138–141).</p>
+          <div class="flex flex-wrap gap-2 mb-4" id="alcohol-tabs"></div>
+          <div id="alcohol-detail" class="lab-subpanel p-4 text-sm"></div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           CHAPTER 6: TAKING IT TO THE NEXT LEVEL
+      =============================================================== -->
+      <section role="tabpanel" id="panel-ch6" class="tab-panel space-y-6">
+        <div>
+          <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 6 · PP. 142–155</span>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">Taking It to the Next Level</h2>
+          <p class="text-sm text-muted mt-1">Modernist Indian cooking: microwave quantum physics, Instant Pot sensors, modernist emulsifiers &amp; thickeners, smoking, and sous vide.</p>
+        </div>
+
+        <!-- 6A. Microwave 12 cm Standing-Wave Visualizer -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div id="sec-microwave" class="lab-card p-5 sm:p-6 lg:col-span-6 scroll-mt-32">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="font-display text-xl font-bold">Microwave 2450 MHz Wave Visualizer</h3>
+                <p class="text-xs text-muted">Wavelength = 12 cm → creates cold dead spots where wave amplitude = 0 (pp. 145–146).</p>
+              </div>
+              <div class="flex gap-1.5">
+                <button type="button" data-papad="flat" class="lab-btn active px-3 py-1 text-xs">Flat Papad</button>
+                <button type="button" data-papad="rolled" class="lab-btn px-3 py-1 text-xs">Rolled in Glass</button>
+              </div>
+            </div>
+            <svg id="microwave-svg" viewBox="0 0 440 210" class="w-full h-auto lab-subpanel p-2" role="img" aria-label="Microwave standing wave and papad dead spot visualizer"></svg>
+            <p id="papad-explain" class="text-xs text-muted mt-3 leading-relaxed"></p>
+          </div>
+
+          <div id="sec-mwhacks" class="lab-card p-5 sm:p-6 lg:col-span-6 scroll-mt-32">
+            <h3 class="font-display text-xl font-bold mb-2">7-Hack Microwave Cheat Sheet (pp. 144–146)</h3>
+            <ul class="space-y-2 text-xs sm:text-sm text-muted">
+              <li><strong style="color:var(--text-main);">1. 3-Min Chana Sabzi:</strong> Coconut milk (or starch-stabilized yoghurt) emulsion heats fats alongside water + spices + canned/cooked chana.</li>
+              <li><strong style="color:var(--text-main);">2. Spreadable Butter:</strong> Half power melts butter evenly without turning water to steam and breaking the emulsion.</li>
+              <li><strong style="color:var(--text-main);">3. Tubular Restaurant Papad:</strong> Roll raw papad into a glass tumbler so every point rotates past standing-wave peaks.</li>
+              <li><strong style="color:var(--text-main);">4. 8-Min Ghee from Malai:</strong> Microwave collected milk cream in a tall vessel for 7–8 mins, then strain brown solids.</li>
+              <li><strong style="color:var(--text-main);">5. Emergency Chickpea Soak:</strong> Microwave dry chana in water 20 mins on low + rest 20 mins = 8-hour soak!</li>
+              <li><strong style="color:var(--text-main);">6. Instant Dried Herbs:</strong> Dehydrate curry leaves and mint into shelf-stable powders in minutes.</li>
+              <li><strong style="color:var(--text-main);">7. Single-Serve Pulao:</strong> 10 mins high (gelatinize at 80°C) + 10–15 mins low (water absorption) + lime &amp; MSG.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 6B. Sous Vide Explorer + Modernist Ingredients -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div id="sec-sousvide" class="lab-card p-5 sm:p-6 lg:col-span-7 scroll-mt-32">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="font-display text-xl font-bold">Sous Vide Time &amp; Temperature Guide</h3>
+                <p class="text-xs text-muted">Thermal equilibrium guarantees zero overcooking. Always finish with a brief high-heat pan sear for Maillard crust (pp. 152–155).</p>
+              </div>
+              <div class="flex gap-1.5">
+                <button type="button" data-sv-filter="all" class="lab-btn active px-2.5 py-1 text-xs">All (10)</button>
+                <button type="button" data-sv-filter="tender" class="lab-btn px-2.5 py-1 text-xs">Quick (&le;150m)</button>
+                <button type="button" data-sv-filter="tough" class="lab-btn px-2.5 py-1 text-xs">Tough (8h)</button>
+              </div>
+            </div>
+            <div class="relative h-72">
+              <canvas id="sousvide-chart" role="img" aria-label="Grouped bar chart of sous vide temperature and time for 10 items"></canvas>
+            </div>
+          </div>
+
+          <div id="sec-pantry" class="lab-card p-5 sm:p-6 lg:col-span-5 space-y-3 scroll-mt-32">
+            <h3 class="font-display text-xl font-bold">Modernist Indian Pantry (pp. 149–152)</h3>
+            <div class="lab-subpanel p-3.5">
+              <div class="font-bold text-sm">Sodium Citrate ("Sour Salt")</div>
+              <p class="text-xs text-muted mt-0.5">Melts any fancy cheese smoothly into IPL beer-cheese dips or chilli-chaat slices without fat splitting.</p>
+            </div>
+            <div class="lab-subpanel p-3.5">
+              <div class="font-bold text-sm">Sodium Bisulphite</div>
+              <p class="text-xs text-muted mt-0.5">Tiny pinch stops polyphenol oxidase &amp; oxidation so green chutneys stay electric green in the fridge.</p>
+            </div>
+            <div class="lab-subpanel p-3.5">
+              <div class="font-bold text-sm">Xanthan Gum</div>
+              <p class="text-xs text-muted mt-0.5">Thickens gravies without muting flavour and lets jowar/bajra rotis roll cleanly without cracking.</p>
+            </div>
+            <div class="lab-subpanel p-3.5">
+              <div class="font-bold text-sm">Soy Lecithin &amp; Pyroligneous Acid</div>
+              <p class="text-xs text-muted mt-0.5">Lecithin binds oil + watery acid into stable dressings; liquid smoke (or charcoal + ghee dhungar for 2–3 mins) adds tandoor aroma.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           CHAPTER 7: BURN THE RECIPE (THE LIVE DISH GENERATORS)
+      =============================================================== -->
+      <section role="tabpanel" id="panel-ch7" class="tab-panel space-y-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-3">
+          <div>
+            <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 7 · PP. 156–192</span>
+            <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">Burn the Recipe: Live Dish Engines</h2>
+            <p class="text-sm text-muted mt-1">Five reusable metamodels plus exact weight-based hydration and 8% brining calculators.</p>
+          </div>
+          <div class="flex flex-wrap gap-1.5" id="gen-subtabs" role="tablist" aria-label="Dish generators">
+            <button type="button" role="tab" data-gen="gravy" class="lab-btn active px-3 py-1.5 text-xs">Gravy Stack</button>
+            <button type="button" role="tab" data-gen="bread" class="lab-btn px-3 py-1.5 text-xs">Bread &amp; Brine</button>
+            <button type="button" role="tab" data-gen="chutney" class="lab-btn px-3 py-1.5 text-xs">Chutney &amp; Raita</button>
+            <button type="button" role="tab" data-gen="salad" class="lab-btn px-3 py-1.5 text-xs">Salad &amp; 3:1 Dressing</button>
+            <button type="button" role="tab" data-gen="rice" class="lab-btn px-3 py-1.5 text-xs">Rice Algorithms</button>
+          </div>
+        </div>
+
+        <!-- 7.1 Indian Gravy Algorithm Generator -->
+        <div id="gen-panel-gravy" class="scroll-mt-32 lab-card p-5 sm:p-6 space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="gravy-main" class="block text-xs font-mono-lab text-muted mb-1.5">1 · MAIN INGREDIENT</label>
+              <select id="gravy-main" class="lab-input w-full text-sm">
+                <option value="legumes">Legumes (Chana / Rajma / Black Urad)</option>
+                <option value="veg">Vegetables (Cauliflower / Bhindi / Pumpkin)</option>
+                <option value="meat">Meat (Chicken / Mutton)</option>
+                <option value="seafood">Seafood (Fish / Prawns)</option>
+                <option value="eggs">Eggs / Paneer</option>
+              </select>
+            </div>
+            <div>
+              <label for="gravy-region" class="block text-xs font-mono-lab text-muted mb-1.5">2 · REGIONAL FLAVOUR PROFILE</label>
+              <select id="gravy-region" class="lab-input w-full text-sm">
+                <option value="punjabi">Punjabi (Onion-Tomato-Ghee)</option>
+                <option value="makhani">Makhani (Butter-Tomato-Cashew)</option>
+                <option value="chettinadu">Chettinadu (Shallot-Fennel-Sesame)</option>
+                <option value="malabar">Malabar (Coconut Oil-Curry Leaf-Coconut Milk)</option>
+                <option value="mughlai">Mughlai (Ghee-Cashew-Mace-Milk)</option>
+                <option value="bengali">Bengali (Mustard Oil-Panch Phoran)</option>
+                <option value="gujarati">Gujarati (Besan-Yoghurt-Sweet-Lime)</option>
+                <option value="jain">Jain (No Onion/Garlic · Hing-Turmeric-Jeera)</option>
+              </select>
+            </div>
+            <div class="flex flex-col justify-end gap-2">
+              <div class="flex flex-wrap gap-3 text-xs font-medium">
+                <label class="flex items-center gap-1.5 cursor-pointer"><input id="gravy-alcohol" type="checkbox" checked class="w-4 h-4 accent-red-700" /> Alcohol deglaze</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input id="gravy-base" type="checkbox" checked class="w-4 h-4 accent-red-700" /> Frozen base gravy</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input id="gravy-smoke" type="checkbox" class="w-4 h-4 accent-red-700" /> Charcoal smoke</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="gravy-stack-output" class="space-y-2.5"></div>
+        </div>
+
+        <!-- 7.2 Bread Hydration & 8% Brining Calculators -->
+        <div id="gen-panel-bread" class="scroll-mt-32 hidden grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Bread Calculator (p. 173) -->
+          <div class="lab-card p-5 sm:p-6 space-y-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">Indian Bread Hydration Calculator (p. 173)</h3>
+              <p class="text-xs text-muted">Measure in grams, never cups! Autolysis (30 min rest before adding salt) lets gluten form without 10-min kneading.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label for="bread-type" class="block text-xs font-mono-lab text-muted mb-1">BREAD TYPE</label>
+                <select id="bread-type" class="lab-input w-full text-sm"></select>
+              </div>
+              <div>
+                <label for="bread-flour" class="block text-xs font-mono-lab text-muted mb-1">FLOUR WEIGHT (GRAMS)</label>
+                <input id="bread-flour" type="number" min="50" max="2000" step="25" value="200" class="lab-input w-full text-sm font-mono-lab" />
+              </div>
+            </div>
+            <div id="bread-output" class="lab-subpanel p-4 space-y-2 text-sm"></div>
+          </div>
+
+          <!-- 8% Brining Calculator (p. 164) -->
+          <div class="lab-card p-5 sm:p-6 space-y-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">8% Salt Brining Calculator (p. 164)</h3>
+              <p class="text-xs text-muted">Salt dehydrates plant cells but locks moisture inside animal muscle. Always brine first, then marinate &le;1 hour.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label for="brine-cut" class="block text-xs font-mono-lab text-muted mb-1">PROTEIN &amp; CUT</label>
+                <select id="brine-cut" class="lab-input w-full text-sm"></select>
+              </div>
+              <div>
+                <label for="brine-water" class="block text-xs font-mono-lab text-muted mb-1">WATER VOLUME (ML)</label>
+                <input id="brine-water" type="number" min="250" max="5000" step="250" value="1000" class="lab-input w-full text-sm font-mono-lab" />
+              </div>
+            </div>
+            <div id="brine-output" class="lab-subpanel p-4 space-y-2 text-sm"></div>
+          </div>
+        </div>
+
+        <!-- 7.3 Chutney & Raita Generator (p. 188) -->
+        <div id="gen-panel-chutney" class="scroll-mt-32 hidden lab-card p-5 sm:p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="font-display text-xl font-bold">The Chutney &amp; Raita Generator (p. 188)</h3>
+              <p class="text-xs text-muted">Pick sparingly from each column—too many ingredients makes your chutney taste like nothing in particular.</p>
+            </div>
+            <button type="button" id="random-chutney-btn" class="lab-btn active px-4 py-1.5 text-xs">Randomize Balanced Chutney</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3" id="chutney-controls"></div>
+          <div id="chutney-result" class="lab-subpanel p-4 text-sm space-y-2"></div>
+        </div>
+
+        <!-- 7.4 Salad & 3:1 Dressing Generator (p. 192) -->
+        <div id="gen-panel-salad" class="scroll-mt-32 hidden lab-card p-5 sm:p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="font-display text-xl font-bold">The Salad &amp; 3:1 Dressing Generator (pp. 190–192)</h3>
+              <p class="text-xs text-muted">Always salt raw tomatoes &amp; cucumbers ahead of time (never leaves!), and whisk 3 parts Fat : 1 part Acid with an emulsifier.</p>
+            </div>
+            <button type="button" id="random-salad-btn" class="lab-btn active px-4 py-1.5 text-xs">Generate Balanced Salad</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="salad-controls"></div>
+          <div id="salad-result" class="lab-subpanel p-4 text-sm space-y-2"></div>
+        </div>
+
+        <!-- 7.5 Rice Dish Algorithms (pp. 166–169) -->
+        <div id="gen-panel-rice" class="scroll-mt-32 hidden lab-card p-5 sm:p-6 space-y-4">
+          <h3 class="font-display text-xl font-bold">The Rice Dish Algorithms (pp. 166–169)</h3>
+          <div class="flex flex-wrap gap-2" id="rice-algo-tabs"></div>
+          <div id="rice-algo-detail" class="lab-subpanel p-5 text-sm space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           CHAPTER 8: THE BIRYANI & METHODOLOGY
+      =============================================================== -->
+      <section role="tabpanel" id="panel-ch8" class="tab-panel space-y-6">
+        <div>
+          <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 8 &amp; METHODOLOGY · PP. 193–209</span>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">The Biryani Project Plan &amp; A/B Kitchen Log</h2>
+          <p class="text-sm text-muted mt-1">Biryani is the "Gaia of dishes"—six parallel tracks converging into a 5-layer dum stack, plus Krish’s scientific kitchen journal.</p>
+        </div>
+
+        <!-- 8A. 6-Track Parallel Biryani Gantt & Live Countdown Timer -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div id="sec-gantt" class="lab-card p-5 sm:p-6 lg:col-span-8 scroll-mt-32">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 class="font-display text-xl font-bold">6-Track Parallel Biryani Gantt Planner (p. 202)</h3>
+                <p class="text-xs text-muted">Click a bar or tick a task as you go. Your progress is saved on this device. Balanced ratio = 1:1 rice to meat/veg by weight.</p>
+              </div>
+              <span id="biryani-progress" class="teal-pill px-3 py-1 text-xs font-mono-lab font-semibold">0 / 12 DONE</span>
+            </div>
+            <div class="h-1.5 rounded-full overflow-hidden mb-3" style="background:var(--border-subtle)"><div id="biryani-progress-bar" class="h-full rounded-full transition-all duration-300" style="width:0;background:var(--accent-3)"></div></div>
+            <div class="lab-subpanel p-2 mb-4 overflow-x-auto">
+              <svg id="biryani-gantt-svg" viewBox="0 0 1000 240" class="w-full min-w-[620px] h-auto" role="group" aria-label="Gantt chart of six parallel biryani tracks"></svg>
+            </div>
+            <div id="biryani-gantt" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+          </div>
+
+          <div class="lab-card p-5 sm:p-6 lg:col-span-4 flex flex-col justify-between space-y-4">
+            <!-- Kitchen Countdown Timer -->
+            <div id="sec-timer" class="scroll-mt-32">
+              <h3 class="font-display text-xl font-bold mb-1">Hands-Free Milestone Timer</h3>
+              <p class="text-xs text-muted mb-3">Quick presets from Chapter 8 (pp. 195–201).</p>
+              <div class="lab-subpanel p-4 text-center mb-3 flex flex-col items-center">
+                <div class="relative w-36 h-36">
+                  <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90" aria-hidden="true">
+                    <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border-subtle)" stroke-width="8" />
+                    <circle id="timer-ring" cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" style="transition:stroke-dashoffset .3s linear" />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <div id="timer-display" class="font-mono-lab text-3xl font-bold tracking-wider" role="timer" aria-live="off">30:00</div>
+                    <div id="timer-label" class="text-[10px] text-muted mt-0.5 px-3 leading-tight">Dum Cook (Low Heat)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-1.5 mb-3">
+                <button type="button" data-timer-min="20" data-timer-name="Rice Soak" class="lab-btn px-2 py-1.5 text-xs">20m Soak</button>
+                <button type="button" data-timer-min="60" data-timer-name="Chicken Brine (8%)" class="lab-btn px-2 py-1.5 text-xs">60m Brine</button>
+                <button type="button" data-timer-min="30" data-timer-name="Dum Cook (Low Heat)" class="lab-btn px-2 py-1.5 text-xs">30m Dum</button>
+                <button type="button" data-timer-min="15" data-timer-name="Retrogradation Rest" class="lab-btn px-2 py-1.5 text-xs">15m Rest</button>
+              </div>
+              <div class="flex gap-2">
+                <button type="button" id="timer-start-btn" class="lab-btn active flex-1 py-2 text-xs font-semibold">Start</button>
+                <button type="button" id="timer-pause-btn" class="lab-btn flex-1 py-2 text-xs font-semibold">Pause</button>
+                <button type="button" id="timer-reset-btn" class="lab-btn px-3 py-2 text-xs font-semibold">Reset</button>
+              </div>
+            </div>
+
+            <!-- 5-Layer Dum Stack -->
+            <div class="lab-subpanel p-3.5">
+              <div class="text-xs font-mono-lab font-bold mb-2">5-LAYER DUM ARCHITECTURE (P. 201)</div>
+              <div class="space-y-1 text-xs">
+                <div class="px-2.5 py-1 rounded" style="background:var(--accent-2-soft);">Top: Remaining Masala Milk, Herbs &amp; Birista</div>
+                <div class="px-2.5 py-1 rounded" style="background:var(--surface-strong);">Layer 4: Remaining 50% Par-Cooked Rice</div>
+                <div class="px-2.5 py-1 rounded" style="background:var(--accent-3-soft);">Layer 3: Half Masala Milk, Mint/Coriander &amp; Birista</div>
+                <div class="px-2.5 py-1 rounded" style="background:var(--surface-strong);">Layer 2: Half Par-Cooked Rice + Strained Yakhni</div>
+                <div class="px-2.5 py-1 rounded" style="background:var(--accent-soft);">Base: Bay Leaves (anti-scorch) + Par-Cooked Meat</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8B. 5 Regional Biryani Variations (p. 203) -->
+        <div id="sec-biryani-regions" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">Regional Biryani Matrix (pp. 203–204)</h3>
+              <p class="text-xs text-muted">Same 6-track skeleton—swap spice mixes, masala milk, and meat preparation to travel across India (or go Thai/Mexican!).</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5" id="biryani-region-tabs"></div>
+          </div>
+          <div id="biryani-region-detail" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        </div>
+
+        <!-- 8C. Interactive A/B Kitchen Log ("The Chapatti Log", p. 207) -->
+        <div id="sec-log" class="lab-card p-5 sm:p-6 space-y-4 scroll-mt-32">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="font-display text-xl font-bold">The Chapatti Log · Personal A/B Experiment Tracker (p. 207)</h3>
+              <p class="text-xs text-muted">Local humidity, water pH, stove output, and flour milling vary by city. Test A vs. B and journal everything!</p>
+            </div>
+            <div class="flex gap-1.5"><button type="button" id="export-log-btn" class="lab-btn px-3.5 py-1.5 text-xs">Copy Log JSON</button><button type="button" id="download-log-btn" class="lab-btn px-3.5 py-1.5 text-xs">Download CSV</button></div>
+          </div>
+
+          <form id="chapatti-log-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 items-end">
+            <div>
+              <label for="log-dish" class="block text-xs font-mono-lab text-muted mb-1">DISH / BRAND</label>
+              <input id="log-dish" type="text" required maxlength="80" placeholder="e.g. Aashirvaad Atta" class="lab-input w-full text-xs" />
+            </div>
+            <div>
+              <label for="log-var-a" class="block text-xs font-mono-lab text-muted mb-1">BASE (G)</label>
+              <input id="log-var-a" type="number" required min="1" max="10000" value="400" class="lab-input w-full text-xs font-mono-lab" />
+            </div>
+            <div>
+              <label for="log-var-b" class="block text-xs font-mono-lab text-muted mb-1">WATER / VAR (G)</label>
+              <input id="log-var-b" type="number" required min="0" max="10000" value="360" class="lab-input w-full text-xs font-mono-lab" />
+            </div>
+            <div class="lg:col-span-2">
+              <label for="log-outcome" class="block text-xs font-mono-lab text-muted mb-1">OUTCOME / TEXTURE NOTE</label>
+              <input id="log-outcome" type="text" required maxlength="160" placeholder="e.g. Soft &amp; pliable after 30m autolysis" class="lab-input w-full text-xs" />
+            </div>
+            <button type="submit" class="lab-btn active py-2 px-4 text-xs font-semibold">Add Entry</button>
+          </form>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr class="border-b font-mono-lab text-xs text-muted" style="border-color:var(--border-subtle);">
+                  <th class="py-2 pr-3">Date</th>
+                  <th class="py-2 pr-3">Dish / Brand</th>
+                  <th class="py-2 pr-3">Base (g)</th>
+                  <th class="py-2 pr-3">Liquid (g)</th>
+                  <th class="py-2 pr-3">Hydration</th>
+                  <th class="py-2 pr-3">Outcome</th>
+                  <th class="py-2 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="chapatti-log-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="max-w-7xl mx-auto px-4 sm:px-6 pb-10">
+      <div class="lab-card p-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-muted">
+        <div>
+          <div class="font-display text-base font-bold" style="color:var(--text-main)">Masala Lab Atlas</div>
+          <p class="mt-1 leading-relaxed">An unofficial, fan-made study companion. Not affiliated with or endorsed by Krish Ashok or Penguin Random House. Page references point to the book. Please buy it and read the real thing.</p>
+        </div>
+        <div>
+          <div class="font-mono-lab font-semibold" style="color:var(--text-main)">SCIENCE MODELS USED</div>
+          <ul class="mt-1 space-y-0.5 leading-relaxed">
+            <li>Kinetic theory: v<sub>rms</sub> = √(3RT/M)</li>
+            <li>Antoine equation for water vapour pressure</li>
+            <li>Barometric formula for altitude</li>
+            <li>Yamaguchi (1967) umami synergy: y = u + γuv</li>
+            <li>Standing-wave heating ∝ sin²(2πx/λ)</li>
+          </ul>
+        </div>
+        <div>
+          <div class="font-mono-lab font-semibold" style="color:var(--text-main)">KEYBOARD</div>
+          <ul class="mt-1 space-y-0.5"><li><kbd>/</kbd> or <kbd>Ctrl K</kbd>: search all tools</li><li><kbd>←</kbd> <kbd>→</kbd>: switch chapters (when a chapter tab is focused)</li><li><kbd>Enter</kbd>: select a focused spice, pH mark or Gantt bar</li></ul>
+          <p class="mt-2">Molecule drawings by SmilesDrawer · charts by Chart.js</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Command palette -->
+  <div id="cmd-palette" class="hidden fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-labelledby="cmd-title">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close-palette></div>
+    <div class="relative max-w-xl mx-auto mt-[12vh] px-4">
+      <div class="lab-card cmd-card overflow-hidden" style="background:var(--surface-strong)">
+        <h2 id="cmd-title" class="sr-only">Search tools</h2>
+        <div class="flex items-center gap-2 px-4 border-b" style="border-color:var(--border-subtle)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" class="text-muted" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="cmd-input" type="text" role="combobox" aria-expanded="true" aria-controls="cmd-results" aria-autocomplete="list" placeholder="Search tools: umami, pH, onion, pressure..." class="flex-1 bg-transparent py-3.5 text-sm outline-none" style="color:var(--text-main)" autocomplete="off" />
+          <kbd class="font-mono-lab text-[10px] px-1.5 py-0.5 rounded border text-muted" style="border-color:var(--border-subtle)">ESC</kbd>
+        </div>
+        <ul id="cmd-results" role="listbox" class="max-h-[50vh] overflow-y-auto p-2"></ul>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" id="to-top" class="lab-btn fixed bottom-5 left-5 z-50 w-10 h-10 flex items-center justify-center" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+
+  <!-- In-page Toast Notification -->
+  <div id="toast-box" role="status" aria-live="polite" class="lab-card px-4 py-2.5 text-xs sm:text-sm font-medium opacity-0 pointer-events-none translate-y-2"></div>
+
+</body>
+</html>

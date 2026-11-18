@@ -1,0 +1,14 @@
+{
+  "name": "masala-lab-atlas",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Interactive visual science atlas of Indian cooking (unofficial Masala Lab companion).",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i src/tailwind.input.css -o assets/css/tailwind.css --minify",
+    "build": "npm run build:css",
+    "serve": "python3 -m http.server 8080"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

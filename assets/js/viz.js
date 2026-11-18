@@ -102,9 +102,8 @@ function drawMolecule(canvas, name, opts = {}) {
       width, height, padding: opts.padding ?? 14, bondThickness: 1.15,
       fontSizeLarge: 7, fontSizeSmall: 5, compactDrawing: false, terminalCarbons: false
     });
-    const theme = state.theme === 'dark' ? 'dark' : 'light';
     let ok = true;
-    SmilesDrawer.parse(mol.smiles, (tree) => drawer.draw(tree, canvas, theme, false), () => { ok = false; });
+    SmilesDrawer.parse(mol.smiles, (tree) => drawer.draw(tree, canvas, 'light', false), () => { ok = false; });
     if (!ok) return fail('Could not parse structure');
     return true;
   } catch (e) {
@@ -689,13 +688,3 @@ function renderCapsaicin() {
   drawMolecule(document.getElementById('capsaicin-canvas'), 'Capsaicin', { width: 240, height: 120, padding: 6 });
 }
 
-/* Re-draw every theme-sensitive canvas viz */
-function refreshScienceViz() {
-  renderThermoBand(Number(document.getElementById('thermal-slider').value));
-  drawKineticsFrame(0);
-  renderBoilingLab();
-  renderUmamiModel();
-  renderMaillardStructures();
-  renderCapsaicin();
-  if (typeof renderMoleculeViewer === 'function') renderMoleculeViewer();
-}

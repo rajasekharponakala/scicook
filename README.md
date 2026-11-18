@@ -17,7 +17,7 @@ It is a static site with no build step needed to view it. Open `index.html` or v
 | 8 · Biryani | SVG swim-lane Gantt (click bars, saved locally), ring countdown timer with alarm, A/B log with CSV export |
 
 Also: command palette (`/` or `Ctrl K`) that searches every tool, deep links (`#ch4`, `#sec-umami`),
-4 themes (saved, and following the OS dark mode setting), keyboard access for SVG graphics, and reduced-motion support.
+a single neobrutalist "kitchen zine" design (thick ink borders, hard offset shadows), keyboard access for SVG graphics, and reduced-motion support.
 
 ## Develop
 
@@ -39,7 +39,7 @@ Pushes are deployed by `.github/workflows/pages.yml`.
 - Timer drifted in background tabs (decrementing `setInterval`) → wall-clock based, with alarm sound and tab-title countdown
 - Thermal readout used the *nearest* milestone (e.g. 240 °C showed "Ghee smoke point") → shows the regime you have actually reached
 - Home search claimed to find tools ("garlic", "brine") but only searched chapter blurbs → full tool index with jump-to links
-- No URL routing, theme not remembered, biryani progress lost on reload, microwave diagram invisible in dark mode, charts ignored non-dark themes, tabs/SVG nodes not keyboard accessible, no focus styles → all fixed
+- No URL routing, biryani progress lost on reload, tabs/SVG nodes not keyboard accessible, no focus styles → all fixed
 
 ## Disclaimer
 

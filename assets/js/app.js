@@ -2,7 +2,6 @@
    APP STATE
 ===================================================================== */
 const state = {
-  theme: 'glass',
   tab: 'overview',
   pcCat: 'all',
   pcSoda: false,
@@ -39,7 +38,7 @@ const state = {
   logs: []
 };
 
-const STORE_KEYS = { log: 'masala_lab_chapatti_log', theme: 'masala_lab_theme', biryani: 'masala_lab_biryani_checks' };
+const STORE_KEYS = { log: 'masala_lab_chapatti_log', biryani: 'masala_lab_biryani_checks' };
 
 function storeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
 function storeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
@@ -89,11 +88,10 @@ let scovilleChart = null;
 let svChart = null;
 
 function getChartPalette() {
-  // Read the live design tokens so charts follow every theme, not just dark.
-  const isDark = state.theme === 'dark';
+  // Read the live design tokens so charts match the page styling.
   return {
-    text: cssVar('--text-main', isDark ? '#e2e8f0' : '#1e293b'),
-    grid: isDark ? 'rgba(148,163,184,0.16)' : 'rgba(15,23,42,0.08)',
+    text: cssVar('--text-main', '#111111'),
+    grid: 'rgba(17,17,17,0.12)',
     accent: cssVar('--accent', '#b91c1c'),
     amber: cssVar('--accent-2', '#d97706'),
     teal: cssVar('--accent-3', '#0f766e'),
@@ -125,7 +123,7 @@ function renderFatChart() {
         label: 'Smoke Point (°C)',
         data: rows.map(r => r.temp),
         backgroundColor: rows.map(r => r.fry ? p.teal : p.accent),
-        borderRadius: state.theme === 'brutal' ? 0 : 6
+        borderRadius: 0
       }]
     },
     options: {
@@ -162,7 +160,7 @@ function renderScovilleChart() {
         label: 'Scoville Heat Units (SHU)',
         data: SCOVILLE_DATA.map(d => isLog ? Math.max(d.shu, 1) : d.shu),
         backgroundColor: SCOVILLE_DATA.map((d, i) => i >= 6 ? p.accent : i >= 3 ? p.amber : p.teal),
-        borderRadius: state.theme === 'brutal' ? 0 : 6
+        borderRadius: 0
       }]
     },
     options: {
@@ -199,8 +197,8 @@ function renderSousVideChart() {
     data: {
       labels: rows.map(r => r.item),
       datasets: [
-        { label: 'Temp (°C)', data: rows.map(r => r.temp), backgroundColor: p.accent, yAxisID: 'y', borderRadius: state.theme === 'brutal' ? 0 : 5 },
-        { label: 'Time (mins)', data: rows.map(r => r.mins), backgroundColor: p.amber, yAxisID: 'y1', borderRadius: state.theme === 'brutal' ? 0 : 5 }
+        { label: 'Temp (°C)', data: rows.map(r => r.temp), backgroundColor: p.accent, yAxisID: 'y', borderRadius: 0 },
+        { label: 'Time (mins)', data: rows.map(r => r.mins), backgroundColor: p.amber, yAxisID: 'y1', borderRadius: 0 }
       ]
     },
     options: {
@@ -1046,32 +1044,6 @@ function selectGenerator(key) {
   });
 }
 
-function switchTheme(themeId, opts = {}) {
-  if (!['glass', 'brutal', 'editorial', 'dark'].includes(themeId)) themeId = 'glass';
-  state.theme = themeId;
-  document.documentElement.setAttribute('data-theme', themeId);
-  document.querySelectorAll('[data-theme-btn]').forEach(b => {
-    const on = b.dataset.themeBtn === themeId;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
-  const sel = document.getElementById('theme-select');
-  if (sel) sel.value = themeId;
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', themeId === 'dark' ? '#090d16' : '#f4f6fb');
-  if (opts.silent) return;
-  storeSet(STORE_KEYS.theme, themeId);
-  const names = { glass: 'Glassmorphism · Frosted Lab', brutal: 'Neobrutalism · Kitchen Zine', editorial: 'Editorial Bento · Swiss Print', dark: 'Molecular Dark · Midnight Lab' };
-  showToast(`Theme: ${names[themeId]}`);
-  // Re-render charts & canvases so colours follow the new tokens
-  if (state.tab === 'ch1') renderFatChart();
-  if (state.tab === 'ch2') renderScovilleChart();
-  if (state.tab === 'ch6') renderSousVideChart();
-  refreshScienceViz();
-  renderSpiceNetwork();
-  renderMaillardStructures();
-}
-
 /* =====================================================================
    COMMAND PALETTE (Ctrl/⌘ + K, or "/")
 ===================================================================== */
@@ -1139,7 +1111,6 @@ function init() {
     const saved = JSON.parse(storeGet(STORE_KEYS.biryani) || '[]');
     if (Array.isArray(saved)) state.biryaniChecked = new Set(saved.filter(id => BIRYANI_TRACKS.some(t => t.id === id)));
   } catch (e) {}
-  switchTheme(document.documentElement.getAttribute('data-theme') || 'glass', { silent: true });
   state.viewMolecule = 'Cinnamaldehyde';
   initKinetics();
   bindThermoBand();
@@ -1215,8 +1186,6 @@ function init() {
       return renderBiryaniGantt();
     }
 
-    const themeBtn = e.target.closest('[data-theme-btn]');
-    if (themeBtn) return switchTheme(themeBtn.dataset.themeBtn);
 
     const tabBtn = e.target.closest('[data-tab]');
     if (tabBtn) return switchTab(tabBtn.dataset.tab);
@@ -1447,7 +1416,6 @@ function init() {
   // Input & Change Listeners
   document.getElementById('atlas-search').addEventListener('input', (e) => renderOverviewBento(e.target.value));
   document.getElementById('thermal-slider').addEventListener('input', (e) => updateThermal(e.target.value));
-  document.getElementById('theme-select')?.addEventListener('change', (e) => switchTheme(e.target.value));
   ['alt-slider', 'gauge-slider', 'cooker-toggle'].forEach(id => document.getElementById(id).addEventListener('input', renderBoilingLab));
   ['umami-u', 'umami-v'].forEach(id => document.getElementById(id).addEventListener('input', renderUmami));
   document.getElementById('cmd-input').addEventListener('input', (e) => renderPalette(e.target.value));

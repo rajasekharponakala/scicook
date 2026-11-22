@@ -44,9 +44,12 @@ const SECTION_INDEX = [
   { id: 'gen-panel-salad', tab: 'ch7', gen: 'salad', title: 'Salad & 3:1 dressing generator', kw: 'salad dressing vinaigrette' },
   { id: 'gen-panel-rice', tab: 'ch7', gen: 'rice', title: 'Rice dish algorithms', kw: 'rice pulao khichdi pongal lemon rice' },
   { id: 'sec-gantt', tab: 'ch8', title: '6-track biryani Gantt planner', kw: 'biryani gantt plan tracks' },
+  { id: 'sec-timeline', tab: 'ch8', title: 'Interactive biryani preparation timeline', kw: 'timeline scrubber scrub playhead autoplay biryani plan timeline scrub timeline' },
   { id: 'sec-timer', tab: 'ch8', title: 'Kitchen countdown timer', kw: 'timer dum soak brine rest alarm' },
   { id: 'sec-biryani-regions', tab: 'ch8', title: 'Regional biryani matrix', kw: 'hyderabadi awadhi kolkata thalassery ambur' },
-  { id: 'sec-log', tab: 'ch8', title: 'Chapatti A/B experiment log', kw: 'log experiment journal ab test hydration' }
+  { id: 'sec-log', tab: 'ch8', title: 'Chapatti A/B experiment log', kw: 'log experiment journal ab test hydration' },
+  { id: 'sec-spice-quiz', tab: 'ch2', title: 'Spice molecule puzzle quiz', kw: 'quiz puzzle multiple choice molecule masala pairing knowledge check facts' },
+  { id: 'sec-blind-taste', tab: 'ch4', title: 'Blind taste pH game', kw: 'game guess pH blind taste drag cursor reveal score' }
 ];
 
 const SPICE_CATEGORY_COLORS = {
@@ -353,4 +356,83 @@ const INITIAL_LOG = [
   { id: 'l3', date: '2020-03-20', dish: 'Killsbury Atta', base: 400, liquid: 300, outcome: 'Kinda okay' },
   { id: 'l4', date: '2020-03-21', dish: 'Killsbury Atta', base: 400, liquid: 400, outcome: 'Perfect! (100% hydration)' },
   { id: 'l5', date: '2020-03-22', dish: 'Usherwhat Atta', base: 400, liquid: 450, outcome: 'Sticky mess' }
+];
+
+// =====================================================================
+// QUIZ DECKS (CH2 · SPICE MOLECULE PUZZLE)
+// Multiple-choice knowledge check using real flavour molecules.
+// =====================================================================
+const SPICE_QUIZ = [
+  {
+    q: 'Which molecule is cumin’s signature flavour?',
+    choices: [
+      { t: 'Cuminaldehyde', c: true },
+      { t: 'Myristicin' },
+      { t: 'Piperine' },
+      { t: 'Capsaicin' }
+    ],
+    hint: 'Cumin’s major volatile is cuminaldehyde — a pungent, slightly spicy aldehyde (pp. 86–89).'
+  },
+  {
+    q: 'Which molecule dominates the smell of clove (and the heat of chillies)?',
+    choices: [
+      { t: 'Anethole' },
+      { t: 'Eugenol', c: true },
+      { t: 'Caryophyllene' },
+      { t: 'Piperine' }
+    ],
+    hint: 'Clove is around 90% eugenol (pp. 86–89); chilli delivers piperine-family heat instead.'
+  },
+  {
+    q: 'What gives cardamom its penetrating, menthol-like character?',
+    choices: [
+      { t: 'Cineole' },
+      { t: 'a-Fenchyl Acetate', c: true },
+      { t: 'Eugenol' },
+      { t: 'Limonene' }
+    ],
+    hint: 'Cardamom’s main volatile is the menthol-like ester a-fenchyl acetate (pp. 86–89).'
+  },
+  {
+    q: 'Black pepper’s familiar “pungent, hot bite” comes from which molecule?',
+    choices: [
+      { t: 'Gingerol' },
+      { t: 'Capsaicin' },
+      { t: 'Piperine', c: true },
+      { t: 'Pyrazines' }
+    ],
+    hint: 'Pepper contains piperine (p. 86) — a pungent amide, quite different from gingerol’s “hot-but-sweet” receptors.'
+  },
+  {
+    q: 'Capsaicin’s chemical family is best described as?',
+    choices: [
+      { t: 'Phenylpropene ether' },
+      { t: 'Vanilloid alkaloid', c: true },
+      { t: 'Furanone lactone' },
+      { t: 'Thiophene' }
+    ],
+    hint: 'Capsaicinoids are vanilloids — a phenolic ring joined to a long greasy hydrocarbon tail (p. 89), which is why they dissolve in fat and alcohol.'
+  },
+  {
+    q: 'Which molecule gives saffron its colour?',
+    choices: [
+      { t: 'Safranal' },
+      { t: 'Cineole' },
+      { t: 'Picrocrocin', c: true },
+      { t: 'Gingerol' }
+    ],
+    hint: 'Picrocrocin produces the colour; safranal is the aromatizing compound created from it on threading (p. 89).'
+  }
+];
+
+// =====================================================================
+// BLIND TASTE GAME (CH4 · DROPPING ACID)
+// Five anonymized drinks; guess the pH of each, then reveal.
+// =====================================================================
+const BLIND_TASTES = [
+  { id: 'bt1', title: 'Tomato & Basil Cooler', ph: 4.1 },
+  { id: 'bt2', title: 'Spiced Mango Lassi', ph: 5.1 },
+  { id: 'bt3', title: 'Tamarind & Cumin Soup', ph: 3.4 },
+  { id: 'bt4', title: 'Lemon-Kaffir Lime Drink', ph: 2.3 },
+  { id: 'bt5', title: 'Watermelon & Lime Agua Fresca', ph: 4.6 }
 ];

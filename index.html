@@ -428,6 +428,26 @@
             <div id="blend-notes" class="md:col-span-5 lab-subpanel p-5 space-y-2 text-sm"></div>
           </div>
         </div>
+
+        <!-- 2D. Spice Molecule Puzzle Quiz (pp. 86–89) -->
+        <div id="sec-spice-quiz" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">Spice Molecule Puzzle Quiz (p. 86)</h3>
+              <p class="text-xs sm:text-sm text-muted">Test yourself on the real molecules behind Masala Lab’s flavour network. Multiple choice — arrows and space navigate the quiz.</p>
+            </div>
+            <span id="spice-quiz-score" aria-live="polite" class="teal-pill px-3 py-1 text-xs font-mono-lab font-semibold">0 / 6</span>
+          </div>
+          <div id="spice-quiz-stage" role="group" aria-label="Spice molecule puzzle questions"></div>
+          <div id="spice-quiz-hint" class="px-1 mt-1"></div>
+          <div id="spice-quiz-feedback" class="mt-4" role="status" hidden></div>
+          <div class="flex gap-2 mt-4" id="spice-quiz-actions">
+            <button type="button" id="spice-quiz-reveal" class="lab-btn px-4 py-2">Reveal Answer</button>
+            <button type="button" id="spice-quiz-next" class="lab-btn px-3 py-2">Next Question</button>
+          </div>
+          <div id="spice-quiz-summary" class="mt-2"></div>
+          <button type="button" id="spice-quiz-reset" class="lab-btn px-3 py-2 text-xs" hidden>Reset Quiz</button>
+        </div>
       </section>
 
       <!-- ===============================================================
@@ -591,6 +611,23 @@
             <div class="lab-subpanel p-3 mt-4 text-xs text-muted">
               <strong>Pro Tip (p. 128):</strong> "When recipes call for tomato puree, noobs add puree, experts add tomato paste, and legends add tomato ketchup."
             </div>
+          </div>
+        </div>
+
+        <!-- 4C. Blind Taste Game: Guess the pH of Five Anonymized Dishes -->
+        <div id="sec-blind-taste" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">Blind Taste Game: Guess the pH of Five Dishes</h3>
+              <p class="text-xs sm:text-sm text-muted">Five anonymized drinks — drag each slider to your guess of the pH. Reveal and see how close you were. Use keyboard arrows on the sliders (native).</p>
+            </div>
+            <span id="taste-best-score" class="teal-pill px-3 py-1 text-xs font-mono-lab font-semibold" aria-live="polite">BEST 0</span>
+          </div>
+          <div id="blind-shots"></div>
+          <div id="taste-verdict" class="hidden space-y-1.5" aria-live="polite"></div>
+          <div class="flex gap-2 mt-4">
+            <button type="button" id="taste-reveal" class="lab-btn px-4 py-2">Reveal All Answers</button>
+            <button type="button" id="taste-reset" class="lab-btn px-3 py-2">Reset Game</button>
           </div>
         </div>
       </section>
@@ -892,6 +929,29 @@
           <span class="accent-pill px-3 py-1 text-xs font-mono-lab font-semibold">CHAPTER 8 &amp; METHODOLOGY · PP. 193–209</span>
           <h2 class="font-display text-3xl sm:text-4xl font-bold mt-2">The Biryani Project Plan &amp; A/B Kitchen Log</h2>
           <p class="text-sm text-muted mt-1">Biryani is the "Gaia of dishes"—six parallel tracks converging into a 5-layer dum stack, plus Krish’s scientific kitchen journal.</p>
+        </div>
+
+        <!-- 8A0. Interactive Biryani Preparation Timeline -->
+        <div id="sec-timeline" class="lab-card p-5 sm:p-6 scroll-mt-32">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="font-display text-xl font-bold">Biryani Preparation Timeline (pp. 195–201)</h3>
+              <p class="text-xs sm:text-sm text-muted">Scrub the plan: drag, ArrowLeft/Right to step through tracks, Space to autoplay. Watch the active track light up — drag to rehearse the prep.</p>
+            </div>
+            <div class="flex flex-col text-right">
+              <span id="timeline-current" class="font-mono-lab text-[11px] sm:text-xs text-muted font-semibold text-right">—</span>
+              <span class="teal-pill px-3 py-1 text-xs font-mono-lab font-semibold mt-0.5">12 STAGES · 0–100 MIN SCALE</span>
+            </div>
+          </div>
+          <div class="lab-subpanel p-2 mb-2">
+            <svg id="biryani-timeline-svg" viewBox="0 0 1000 70" class="w-full block cursor-pointer touch-none select-none" style="height:72px" role="group" aria-label="Interactive biryani preparation timeline, 12 stages 0 to 100 minutes, drag or arrow-key to scrub, spacebar to autoplay." tabindex="0"></svg>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="text-xs text-muted max-w-3xl" id="timeline-detail">—</p>
+            <div class="flex gap-2">
+              <span id="timeline-score" class="teal-pill px-3 py-1 text-xs font-mono-lab font-semibold">0 / 12 COMPLETED</span>
+            </div>
+          </div>
         </div>
 
         <!-- 8A. 6-Track Parallel Biryani Gantt & Live Countdown Timer -->

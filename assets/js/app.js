@@ -24,6 +24,9 @@ const state = {
   papadMode: 'flat',
   svFilter: 'all',
   genSubtab: 'gravy',
+  spiceQuiz: { qi: 0, answers: {}, score: 0 },
+  timeline: { playhead: 0, playing: false, raf: null },
+  taste: { guesses: [], best: 0 },
   chutney: { cooked: 'Beetroot', raw: 'Carrot', nutty: 'Coconut', herbs: 'None', salt: 'Table salt', acid: 'Yoghurt (Raita)', sweet: 'None (veggie/fruit sweet)' },
   salad: { greens: 'Baby spinach', veg: 'Salted Cucumber + Tomato', fruit: 'Pomegranate', protein: 'Paneer', crunch: 'Fried onions', dressing: 'Bengali (Mustard oil + Vinegar + Kala namak + Chilli)' },
   riceAlgo: 'steamed',
@@ -38,7 +41,12 @@ const state = {
   logs: []
 };
 
-const STORE_KEYS = { log: 'masala_lab_chapatti_log', biryani: 'masala_lab_biryani_checks' };
+const STORE_KEYS = {
+  log: 'masala_lab_chapatti_log',
+  biryani: 'masala_lab_biryani_checks',
+  spiceQuiz: 'masala_lab_spice_quiz',
+  tasteBest: 'masala_lab_taste_best'
+};
 
 function storeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
 function storeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
@@ -897,6 +905,293 @@ function renderBiryaniRegions() {
   `;
 }
 
+/* =====================================================================
+   NEW TOOL RENDERERS: CH2 SPICE QUIZ, CH8 TIMELINE, CH4 BLIND TASTE
+===================================================================== */
+
+/* ------------------ CH2 · Spice Molecule Puzzle Quiz ------------------ */
+function spiceQuizCorrectIdx(q) { return q ? q.choices.findIndex(c => c.c) : -1; }
+function spiceQuizScore() {
+  return Object.keys(state.spiceQuiz.answers).filter(k =>
+    Number(state.spiceQuiz.answers[k]) === spiceQuizCorrectIdx(SPICE_QUIZ[k])).length;
+}
+function renderSpiceQuizScore() {
+  const el = document.getElementById('spice-quiz-score');
+  if (el) el.textContent = `${spiceQuizScore()} / ${SPICE_QUIZ.length}`;
+}
+function saveSpiceQuiz() { storeSet(STORE_KEYS.spiceQuiz, JSON.stringify(state.spiceQuiz)); }
+function loadSpiceQuiz() {
+  try {
+    const s = JSON.parse(storeGet(STORE_KEYS.spiceQuiz) || '{}');
+    if (s) {
+      state.spiceQuiz = {
+        qi: Number.isInteger(Number(s.qi)) ? Number(s.qi) : 0,
+        answers: { ...(s.answers || {}) },
+        score: Number(s.score) || 0
+      };
+    }
+  } catch (e) {}
+  if (!Number.isInteger(state.spiceQuiz.qi) || state.spiceQuiz.qi > SPICE_QUIZ.length) {
+    state.spiceQuiz = { qi: 0, answers: {}, score: 0 };
+  }
+}
+
+function showSpiceQuiz() {
+  renderSpiceQuizScore();
+  const actions = document.getElementById('spice-quiz-actions');
+  const summary = document.getElementById('spice-quiz-summary');
+  const resetBtn = document.getElementById('spice-quiz-reset');
+  document.getElementById('spice-quiz-feedback').hidden = true;
+  document.getElementById('spice-quiz-reveal').classList.remove('hidden');
+  document.getElementById('spice-quiz-next').classList.add('hidden');
+  const q = SPICE_QUIZ[state.spiceQuiz.qi];
+  if (!q || state.spiceQuiz.qi >= SPICE_QUIZ.length) {
+    if (actions) actions.classList.add('hidden');
+    if (resetBtn) resetBtn.hidden = false;
+    document.getElementById('spice-quiz-stage').replaceChildren();
+    document.getElementById('spice-quiz-hint').replaceChildren();
+    const correct = spiceQuizScore();
+    summary.innerHTML = `
+      <div class="lab-subpanel p-4 flex flex-wrap items-center gap-2">
+        <span class="font-display text-base font-bold">Quiz complete — you got ${correct} / ${SPICE_QUIZ.length} points</span>
+        <span class="px-2.5 py-1 text-xs font-mono-lab font-semibold ${
+          correct === SPICE_QUIZ.length ? 'teal-pill'
+          : correct >= Math.ceil(SPICE_QUIZ.length / 2) ? 'amber-pill'
+          : 'accent-pill'}">
+          ${correct === SPICE_QUIZ.length ? 'Outstanding! ✓' : correct >= Math.ceil(SPICE_QUIZ.length / 2) ? 'Great job!' : 'Keep playing — practice on the network!'}
+        </span>
+      </div>`;
+    return;
+  }
+  if (actions) actions.classList.remove('hidden');
+  if (resetBtn) resetBtn.hidden = true;
+  summary.replaceChildren();
+
+  const savedIdx = state.spiceQuiz.answers[state.spiceQuiz.qi] ?? null;
+  const fb = document.getElementById('spice-quiz-feedback');
+  fb.classList.add('hidden');
+  fb.innerHTML = '';
+  document.getElementById('spice-quiz-hint').innerHTML = q.hint
+    ? `<span class="text-[11px] text-muted" style="padding-left:2.25rem;">${escapeHTML(q.hint)}</span>` : '';
+
+  document.getElementById('spice-quiz-stage').innerHTML = `
+    <div class="font-display text-lg font-bold" role="group" aria-label="Question ${state.spiceQuiz.qi + 1} of ${SPICE_QUIZ.length}">${escapeHTML(q.q)}</div>
+    ${q.choices.map((c, i) => `
+      <label class="quiz-choice ${i === savedIdx ? 'is-active' : ''}" data-qidx="${i}">
+        <input type="radio" name="spice-quiz-q" value="${i}" ${i === savedIdx ? 'checked' : ''}>
+        <span class="quiz-label">${escapeHTML(c.t)}</span>
+      </label>`).join('')}`;
+}
+
+function spiceQuizReveal() {
+  const q = SPICE_QUIZ[state.spiceQuiz.qi];
+  if (!q) return;
+  const cIdx = spiceQuizCorrectIdx(q);
+  const saved = state.spiceQuiz.answers[state.spiceQuiz.qi] ?? null;
+  if (saved === null) { showToast('Choose an answer first.'); return; }
+  const correct = saved !== null && saved === cIdx;
+  document.querySelectorAll('#spice-quiz-stage .quiz-choice').forEach((el, i) => {
+    el.classList.toggle('is-correct', i === cIdx);
+    el.classList.toggle('is-wrong', i === saved && i !== cIdx);
+    const r = el.querySelector('input[type="radio"]');
+    if (r) { r.checked = i === saved; r.disabled = true; }
+  });
+  document.getElementById('spice-quiz-feedback').innerHTML = `
+    <div class="flex items-center gap-2 flex-wrap">
+      ${saved === null
+        ? `<span class="px-2.5 py-1 text-xs font-semibold text-muted">Select an answer to reveal — it was <span class="font-bold" style="color: var(--accent);">${escapeHTML(q.choices[cIdx].t)}</span></span>`
+        : `<span class="${correct ? 'teal-pill' : 'accent-pill'} px-2.5 py-1 text-xs font-bold">${correct ? 'Correct!' : 'Not quite'}</span>
+           <span class="text-xs font-semibold" style="color: var(--text-main);">Answer:</span>
+           <span class="text-xs font-bold" style="color: var(--accent);">${escapeHTML(q.choices[cIdx].t)}</span>
+           <span class="text-xs text-muted">— ${escapeHTML(q.hint || '')}</span>`}
+    </div>`;
+  document.getElementById('spice-quiz-feedback').classList.remove('hidden');
+  document.getElementById('spice-quiz-feedback').hidden = false;
+  document.getElementById('spice-quiz-reveal').classList.add('hidden');
+  document.getElementById('spice-quiz-next').classList.remove('hidden');
+  renderSpiceQuizScore();
+  if (saved !== null) showToast(correct ? `Correct! ${q.choices[cIdx].t}` : `Not quite — it was ${q.choices[cIdx].t}`);
+}
+
+function spiceQuizNext() {
+  if (state.spiceQuiz.qi >= SPICE_QUIZ.length - 1) state.spiceQuiz.qi = SPICE_QUIZ.length;
+  else state.spiceQuiz.qi += 1;
+  showSpiceQuiz();
+  saveSpiceQuiz();
+}
+
+function spiceQuizReset() {
+  state.spiceQuiz = { qi: 0, answers: {}, score: 0 };
+  showSpiceQuiz();
+  saveSpiceQuiz();
+}
+
+/* ------------------ CH8 · Interactive Biryani Preparation Timeline ------------------ */
+function timelineSteps() { return [...BIRYANI_TRACKS].sort((a, b) => a.start - b.start || a.id.localeCompare(b.id)); }
+function timelineEnd(s) { return s.start + s.span; }
+function timelineActive(steps, p) {
+  const inProg = steps.find(s => p >= s.start && p < timelineEnd(s));
+  if (inProg) return inProg;
+  return steps.find(s => s.start > p) || steps[steps.length - 1];
+}
+
+function renderBiryaniTimeline() {
+  const tl = document.getElementById('biryani-timeline-svg');
+  if (!tl) return;
+  const steps = timelineSteps();
+  const X0 = 8, X1 = 992, Y = 34, H = 26;
+  const pos = (t) => X0 + (t / 100) * (X1 - X0);
+  const p = Math.min(100, Math.max(0, state.timeline.playhead));
+  const active = steps[state.timeline.selected] || timelineActive(steps, p);
+  const idx = steps.indexOf(active);
+  const labelEl = document.getElementById('timeline-current');
+  if (labelEl) labelEl.textContent = `Step ${idx + 1} / ${steps.length} · ${active.track}`;
+  const detail = document.getElementById('timeline-detail');
+  if (detail) detail.innerHTML = `<strong>${escapeHTML(active.track)}</strong> — ${escapeHTML(active.task)}`;
+  const completed = steps.filter(s => p >= timelineEnd(s)).length;
+  const scoreEl = document.getElementById('timeline-score');
+  if (scoreEl) scoreEl.textContent = `${completed} / ${steps.length} COMPLETED`;
+
+  tl.innerHTML = `
+    <rect class="tl-track" x="${X0}" y="${Y}" width="${X1 - X0}" height="${H}" rx="6" fill="none" stroke="var(--border-subtle)" stroke-width="2" />
+    ${steps.map((s, i) => {
+      const x = pos(s.start), w = pos(Math.min(100, timelineEnd(s))) - x;
+      const isActive = s === active && state.timeline.playing;
+      const doneBefore = p >= timelineEnd(s);
+      const fill = isActive ? 'var(--accent-2)' : doneBefore ? 'var(--accent-3)' : 'var(--accent-2-soft)';
+      const classes = [`tl-seg`, isActive ? 'is-active' : '', doneBefore ? 'is-done' : ''].join(' ');
+      return `<rect class="${classes}" data-idx="${i}" x="${x}" y="${Y}" width="${w}" height="${H}" style="fill:${fill};" />`;
+    }).join('')}
+    <line x1="${pos(p)}" y1="${Y}" x2="${pos(p)}" y2="${Y + H}" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" opacity="${state.timeline.playing ? 1 : 0.45}" />
+    <circle class="tl-playhead-dot ${state.timeline.playing ? 'anim' : ''}" cx="${pos(p)}" cy="${Y + H / 2}" r="8" fill="var(--accent-2)" stroke="#fff" stroke-width="2" />
+  `;
+}
+
+function autoplayTimelineStep(now) {
+  if (!state.timeline.playing) return;
+  const p = Math.min(100, state.timeline.playhead + (now - state.timeline.last) / 80);
+  state.timeline.last = now;
+  state.timeline.playhead = p;
+  renderBiryaniTimeline();
+  if (p < 100) state.timeline.raf = requestAnimationFrame(autoplayTimelineStep);
+  else { state.timeline.playing = false; state.timeline.raf = null; renderBiryaniTimeline(); }
+}
+
+function bindTimeline() {
+  const tl = document.getElementById('biryani-timeline-svg');
+  if (!tl) return;
+  const steps = timelineSteps();
+  let dragging = false;
+  const seek = (e) => {
+    const r = tl.getBoundingClientRect();
+    const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / Math.max(1, r.width)));
+    state.timeline.selected = undefined;
+    state.timeline.playhead = frac * 100;
+  };
+  const seekToStep = (delta) => {
+    const active = timelineActive(steps, state.timeline.playhead);
+    const i = state.timeline.selected ?? steps.indexOf(active);
+    const n = Math.min(steps.length - 1, Math.max(0, i + delta));
+    state.timeline.selected = n;
+    state.timeline.playhead = steps[n].start;
+  };
+  const toggleAutoplay = () => {
+    if (state.timeline.playing) {
+      state.timeline.playing = false;
+      if (state.timeline.raf) { cancelAnimationFrame(state.timeline.raf); state.timeline.raf = null; }
+    } else {
+      state.timeline.playing = true;
+      state.timeline.selected = undefined;
+      if (state.timeline.playhead >= 100) state.timeline.playhead = 0;
+      state.timeline.last = performance.now();
+      state.timeline.raf = requestAnimationFrame(autoplayTimelineStep);
+    }
+    renderBiryaniTimeline();
+  };
+  tl.addEventListener('pointerdown', (e) => { dragging = true; tl.setPointerCapture(e.pointerId); seek(e); renderBiryaniTimeline(); });
+  tl.addEventListener('pointermove', (e) => { if (dragging) { seek(e); renderBiryaniTimeline(); } });
+  tl.addEventListener('pointerup', () => { dragging = false; renderBiryaniTimeline(); });
+  tl.addEventListener('pointercancel', () => { dragging = false; renderBiryaniTimeline(); });
+  tl.addEventListener('click', (e) => { if (dragging) return; seek(e); renderBiryaniTimeline(); });
+  tl.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); seekToStep(1); renderBiryaniTimeline(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); seekToStep(-1); renderBiryaniTimeline(); }
+    else if (e.key === 'End' || e.key === 'Home') { e.preventDefault(); state.timeline.selected = undefined; state.timeline.playhead = e.key === 'End' ? 100 : 0; renderBiryaniTimeline(); }
+    else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleAutoplay(); }
+  });
+}
+
+/* ------------------ CH4 · Blind Taste Game: Guess the pH ------------------ */
+function tasteClass(err) {
+  if (err <= 0.25) return 'teal-pill';
+  if (err <= 0.6) return 'amber-pill';
+  if (err <= 1.25) return 'accent-pill';
+  return 'red-pill';
+}
+function renderBlindTasteGame() {
+  const shotsEl = document.getElementById('blind-shots');
+  shotsEl.innerHTML = BLIND_TASTES.map((d, i) => {
+    const g = state.taste.guesses[i] ?? 4.6;
+    return `
+      <div class="lab-subpanel p-3" data-shot-idx="${i}">
+        <div class="flex items-start justify-between gap-2 mb-1.5">
+          <strong class="text-sm">${escapeHTML(d.title)}</strong>
+          <span class="text-[11px] font-mono-lab text-muted" id="taste-guess-${i}">Guess: ${g.toFixed(1)}</span>
+        </div>
+        <input type="range" class="lab-slider" id="taste-slider-${i}" min="0" max="14" step="0.1" value="${g.toFixed(1)}"
+               aria-label="Guess the pH of ${escapeHTML(d.title)}" style="width: 100%" />
+      </div>`;
+  }).join('');
+  const verdict = document.getElementById('taste-verdict');
+  verdict.classList.add('hidden');
+  const best = document.getElementById('taste-best-score');
+  if (best) best.textContent = `BEST ${state.taste.best}`;
+  BLIND_TASTES.forEach((d, i) => {
+    document.getElementById(`taste-slider-${i}`)?.addEventListener('input', (e) => {
+      const v = Number(e.target.value);
+      state.taste.guesses[i] = v;
+      const el = document.getElementById(`taste-guess-${i}`);
+      if (el) el.textContent = `Guess: ${v.toFixed(1)}`;
+    });
+  });
+}
+
+function tasteReveal() {
+  const rows = BLIND_TASTES.map((d, i) => {
+    const guess = state.taste.guesses[i] ?? 4.6;
+    const err = Math.abs(guess - d.ph);
+    const score = err <= 0.25 ? 10 : err <= 0.6 ? 7 : err <= 1.25 ? 3 : 0;
+    return { d, guess, actual: d.ph, err, score };
+  });
+  const total = rows.reduce((s, r) => s + r.score, 0);
+  state.taste.best = Math.max(state.taste.best, total);
+  storeSet(STORE_KEYS.tasteBest, String(state.taste.best));
+
+  const verdict = document.getElementById('taste-verdict');
+  verdict.innerHTML = `
+    <div class="font-display text-lg font-bold mb-2">Score: <span class="teal-pill px-2.5 py-1 text-lg font-bold">${total} / 50</span></div>
+    ${rows.map(({ d, guess, actual, err, score }) => `
+      <div class="blind-verdict-row">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="text-sm font-semibold">${escapeHTML(d.title)}</span>
+          <span class="blind-verdict-pts ${tasteClass(err)} px-2.5 py-0.5 text-[11px] font-mono-lab font-bold">+${score}</span>
+        </div>
+        <div class="text-[11px] text-muted mt-0.5">You said ${guess.toFixed(1)} — it is ${actual}</div>
+      </div>`).join('')}
+  `;
+  verdict.classList.remove('hidden');
+  document.getElementById('taste-reveal').classList.add('hidden');
+  document.getElementById('taste-best-score').textContent = `BEST ${state.taste.best}`;
+  showToast(`Blind taste game done: ${total} pts — best ${state.taste.best}`);
+}
+
+function tasteReset() {
+  state.taste.guesses = BLIND_TASTES.map(() => 4.6);
+  renderBlindTasteGame();
+  document.getElementById('taste-verdict').classList.add('hidden');
+  document.getElementById('taste-reveal').classList.remove('hidden');
+}
+
 function updateTimerDisplay() {
   const m = Math.floor(state.timerSeconds / 60);
   const s = state.timerSeconds % 60;
@@ -1154,6 +1449,20 @@ function init() {
   renderRiceAlgos();
   renderBiryaniGantt();
   renderBiryaniRegions();
+  // New interactive tools: spice quiz (ch2), biryani timeline (ch8), blind taste game (ch4)
+  loadSpiceQuiz();
+  state.taste.guesses = BLIND_TASTES.map(() => 4.6);
+  state.taste.best = Number(storeGet(STORE_KEYS.tasteBest) || 0);
+  bindTimeline();
+  renderBiryaniTimeline();
+  showSpiceQuiz();
+  document.getElementById('spice-quiz-stage').addEventListener('change', (e) => {
+    if (!e.target.matches('input[name="spice-quiz-q"]')) return;
+    state.spiceQuiz.answers[state.spiceQuiz.qi] = Number(e.target.value);
+    e.currentTarget.querySelectorAll('.quiz-choice').forEach(label => label.classList.toggle('is-active', label.contains(e.target)));
+    saveSpiceQuiz();
+  });
+  renderBlindTasteGame();
   updateTimerDisplay();
   renderChapattiLog();
 
@@ -1411,6 +1720,18 @@ function init() {
         fallbackCopy(json);
       }
     }
+
+    const quizReveal = e.target.closest('#spice-quiz-reveal');
+    if (quizReveal) return spiceQuizReveal();
+    const quizNext = e.target.closest('#spice-quiz-next');
+    if (quizNext) return spiceQuizNext();
+    const quizReset = e.target.closest('#spice-quiz-reset');
+    if (quizReset) return spiceQuizReset();
+
+    const tasteRevealBtn = e.target.closest('#taste-reveal');
+    if (tasteRevealBtn) return tasteReveal();
+    const tasteResetBtn = e.target.closest('#taste-reset');
+    if (tasteResetBtn) return tasteReset();
   });
 
   // Input & Change Listeners

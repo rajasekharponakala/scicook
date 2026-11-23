@@ -941,10 +941,15 @@ function showSpiceQuiz() {
   const actions = document.getElementById('spice-quiz-actions');
   const summary = document.getElementById('spice-quiz-summary');
   const resetBtn = document.getElementById('spice-quiz-reset');
+  document.getElementById('spice-quiz-feedback').hidden = true;
+  document.getElementById('spice-quiz-reveal').classList.remove('hidden');
+  document.getElementById('spice-quiz-next').classList.add('hidden');
   const q = SPICE_QUIZ[state.spiceQuiz.qi];
   if (!q || state.spiceQuiz.qi >= SPICE_QUIZ.length) {
     if (actions) actions.classList.add('hidden');
     if (resetBtn) resetBtn.hidden = false;
+    document.getElementById('spice-quiz-stage').replaceChildren();
+    document.getElementById('spice-quiz-hint').replaceChildren();
     const correct = spiceQuizScore();
     summary.innerHTML = `
       <div class="lab-subpanel p-4 flex flex-wrap items-center gap-2">
@@ -960,6 +965,7 @@ function showSpiceQuiz() {
   }
   if (actions) actions.classList.remove('hidden');
   if (resetBtn) resetBtn.hidden = true;
+  summary.replaceChildren();
 
   const savedIdx = state.spiceQuiz.answers[state.spiceQuiz.qi] ?? null;
   const fb = document.getElementById('spice-quiz-feedback');
@@ -982,12 +988,13 @@ function spiceQuizReveal() {
   if (!q) return;
   const cIdx = spiceQuizCorrectIdx(q);
   const saved = state.spiceQuiz.answers[state.spiceQuiz.qi] ?? null;
+  if (saved === null) { showToast('Choose an answer first.'); return; }
   const correct = saved !== null && saved === cIdx;
   document.querySelectorAll('#spice-quiz-stage .quiz-choice').forEach((el, i) => {
     el.classList.toggle('is-correct', i === cIdx);
     el.classList.toggle('is-wrong', i === saved && i !== cIdx);
     const r = el.querySelector('input[type="radio"]');
-    if (r) r.checked = i === saved;
+    if (r) { r.checked = i === saved; r.disabled = true; }
   });
   document.getElementById('spice-quiz-feedback').innerHTML = `
     <div class="flex items-center gap-2 flex-wrap">
@@ -999,6 +1006,7 @@ function spiceQuizReveal() {
            <span class="text-xs text-muted">— ${escapeHTML(q.hint || '')}</span>`}
     </div>`;
   document.getElementById('spice-quiz-feedback').classList.remove('hidden');
+  document.getElementById('spice-quiz-feedback').hidden = false;
   document.getElementById('spice-quiz-reveal').classList.add('hidden');
   document.getElementById('spice-quiz-next').classList.remove('hidden');
   renderSpiceQuizScore();
@@ -1034,13 +1042,13 @@ function renderBiryaniTimeline() {
   const X0 = 8, X1 = 992, Y = 34, H = 26;
   const pos = (t) => X0 + (t / 100) * (X1 - X0);
   const p = Math.min(100, Math.max(0, state.timeline.playhead));
-  const active = timelineActive(steps, p);
+  const active = steps[state.timeline.selected] || timelineActive(steps, p);
   const idx = steps.indexOf(active);
   const labelEl = document.getElementById('timeline-current');
   if (labelEl) labelEl.textContent = `Step ${idx + 1} / ${steps.length} · ${active.track}`;
   const detail = document.getElementById('timeline-detail');
   if (detail) detail.innerHTML = `<strong>${escapeHTML(active.track)}</strong> — ${escapeHTML(active.task)}`;
-  const completed = steps.filter(s => p >= timelineEnd(s) && s !== active).length;
+  const completed = steps.filter(s => p >= timelineEnd(s)).length;
   const scoreEl = document.getElementById('timeline-score');
   if (scoreEl) scoreEl.textContent = `${completed} / ${steps.length} COMPLETED`;
 
@@ -1059,9 +1067,10 @@ function renderBiryaniTimeline() {
   `;
 }
 
-function autoplayTimelineStep() {
-  if (!state.timeline.playing || !state.timeline.raf) return;
-  const p = Math.min(100, state.timeline.playhead + 0.8);
+function autoplayTimelineStep(now) {
+  if (!state.timeline.playing) return;
+  const p = Math.min(100, state.timeline.playhead + (now - state.timeline.last) / 80);
+  state.timeline.last = now;
   state.timeline.playhead = p;
   renderBiryaniTimeline();
   if (p < 100) state.timeline.raf = requestAnimationFrame(autoplayTimelineStep);
@@ -1076,12 +1085,14 @@ function bindTimeline() {
   const seek = (e) => {
     const r = tl.getBoundingClientRect();
     const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / Math.max(1, r.width)));
+    state.timeline.selected = undefined;
     state.timeline.playhead = frac * 100;
   };
   const seekToStep = (delta) => {
     const active = timelineActive(steps, state.timeline.playhead);
-    const i = steps.indexOf(active);
+    const i = state.timeline.selected ?? steps.indexOf(active);
     const n = Math.min(steps.length - 1, Math.max(0, i + delta));
+    state.timeline.selected = n;
     state.timeline.playhead = steps[n].start;
   };
   const toggleAutoplay = () => {
@@ -1090,7 +1101,10 @@ function bindTimeline() {
       if (state.timeline.raf) { cancelAnimationFrame(state.timeline.raf); state.timeline.raf = null; }
     } else {
       state.timeline.playing = true;
-      autoplayTimelineStep();
+      state.timeline.selected = undefined;
+      if (state.timeline.playhead >= 100) state.timeline.playhead = 0;
+      state.timeline.last = performance.now();
+      state.timeline.raf = requestAnimationFrame(autoplayTimelineStep);
     }
     renderBiryaniTimeline();
   };
@@ -1102,6 +1116,7 @@ function bindTimeline() {
   tl.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') { e.preventDefault(); seekToStep(1); renderBiryaniTimeline(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); seekToStep(-1); renderBiryaniTimeline(); }
+    else if (e.key === 'End' || e.key === 'Home') { e.preventDefault(); state.timeline.selected = undefined; state.timeline.playhead = e.key === 'End' ? 100 : 0; renderBiryaniTimeline(); }
     else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleAutoplay(); }
   });
 }
@@ -1145,7 +1160,7 @@ function tasteReveal() {
   const rows = BLIND_TASTES.map((d, i) => {
     const guess = state.taste.guesses[i] ?? 4.6;
     const err = Math.abs(guess - d.ph);
-    const score = err <= 0.25 ? 40 : err <= 0.6 ? 28 : err <= 1.25 ? 14 : 4;
+    const score = err <= 0.25 ? 10 : err <= 0.6 ? 7 : err <= 1.25 ? 3 : 0;
     return { d, guess, actual: d.ph, err, score };
   });
   const total = rows.reduce((s, r) => s + r.score, 0);
@@ -1441,6 +1456,12 @@ function init() {
   bindTimeline();
   renderBiryaniTimeline();
   showSpiceQuiz();
+  document.getElementById('spice-quiz-stage').addEventListener('change', (e) => {
+    if (!e.target.matches('input[name="spice-quiz-q"]')) return;
+    state.spiceQuiz.answers[state.spiceQuiz.qi] = Number(e.target.value);
+    e.currentTarget.querySelectorAll('.quiz-choice').forEach(label => label.classList.toggle('is-active', label.contains(e.target)));
+    saveSpiceQuiz();
+  });
   renderBlindTasteGame();
   updateTimerDisplay();
   renderChapattiLog();
@@ -1700,12 +1721,6 @@ function init() {
       }
     }
 
-    const quizChoice = e.target.closest('.quiz-choice');
-    if (quizChoice) {
-      state.spiceQuiz.answers[state.spiceQuiz.qi] = Number(quizChoice.dataset.qidx);
-      saveSpiceQuiz();
-      return showSpiceQuiz();
-    }
     const quizReveal = e.target.closest('#spice-quiz-reveal');
     if (quizReveal) return spiceQuizReveal();
     const quizNext = e.target.closest('#spice-quiz-next');
